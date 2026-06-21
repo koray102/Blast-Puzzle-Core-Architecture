@@ -1,0 +1,59 @@
+using UnityEngine;
+
+public class BoardController : MonoBehaviour
+{
+    public static BoardController Instance { get; private set; }
+
+
+    [Header("Reference Settings")]
+    [SerializeField] private BoardView boardView;
+    
+
+    [Header("Board Settings")]
+    [SerializeField] private int width = 8;
+    [SerializeField] private int height = 10;
+
+    // Sadece Model'i tutuyor, mantık hesaplamıyor.
+    public GridModel Model { get; private set; }
+
+    private void Awake()
+    {
+        // Temel Singleton Kurulumu
+        if (Instance != null && Instance != this)
+        {
+            Destroy(gameObject);
+            return;
+        }
+        Instance = this;
+    }
+
+    private void Start()
+    {
+        // 1. Matematiksel Modeli Oluştur
+        Model = new GridModel(width, height);
+        Debug.Log($"Model oluşturuldu: {width}x{height}");
+        
+        // 2. Görsel Sistemi Tetikle ve Modeli Parametre Olarak Gönder
+        boardView.BuildBoard(Model);
+    }
+
+    private void Update()
+    {
+        if (Input.GetMouseButtonDown(0))
+        {
+            // Ekrana tıklandığında kameradan bir ışın gönder
+            Ray ray = Camera.main.ScreenPointToRay(Input.mousePosition);
+            if (Physics.Raycast(ray, out RaycastHit hit))
+            {
+                // Tıklanan objede NodeView var mı kontrol et
+                NodeView clickedNode = hit.collider.GetComponent<NodeView>();
+                
+                if (clickedNode != null)
+                {
+                    // Modeldeki matematiksel BFS algoritmasını tetikle
+                    Model.CheckAndMatch(clickedNode.X, clickedNode.Y);
+                }
+            }
+        }
+    }
+}

@@ -9,6 +9,8 @@ public class GridModel
 
     // Patlayan blokların listesini dışarıya fırlatacak event
     public event Action<List<Node>> OnBlocksMatched;
+    public event Action<List<BlockMoveData>> OnBlocksFell;
+    public event Action<List<Node>> OnNewBlocksSpawned;
 
 
     public GridModel(int width, int height)
@@ -48,12 +50,12 @@ public class GridModel
     }
     
 
-    public void CheckAndMatch(int startX, int startY)
+    public bool CheckAndMatch(int startX, int startY)
     {
         Node startNode = GetNode(startX, startY);
         
-        // Boş bir yere veya zaten eşleşmiş bir yere tıklandıysa iptal et
-        if (startNode == null || startNode.IsEmpty() || startNode.IsMatched) return;
+        // Boş bir yere veya zaten eşleşmiş bir yere tıklandıysa iptal et ve FALSE döndür
+        if (startNode == null || startNode.IsEmpty() || startNode.IsMatched) return false;
 
         BlockType targetType = startNode.Type;
         List<Node> matchedNodes = new List<Node>();
@@ -101,6 +103,9 @@ public class GridModel
 
             // VFX, SFX ve View için event fırlat
             OnBlocksMatched?.Invoke(matchedNodes);
+
+            // Eşleşme BAŞARILI, Controller'a TRUE döndür
+            return true;
         }
         else
         {
@@ -109,6 +114,76 @@ public class GridModel
             {
                 node.IsMatched = false;
             }
+
+            // Eşleşme BAŞARISIZ, Controller'a FALSE döndür
+            return false;
+        }
+    }
+
+
+    // Bu fonksiyonu BoardController'dan, patlatma işleminden hemen sonra çağıracağız.
+    public void ApplyGravity()
+    {
+        List<BlockMoveData> moveMoves = new List<BlockMoveData>();
+
+        // Sütun sütun tarıyoruz (Soldan sağa)
+        for (int x = 0; x < Width; x++)
+        {
+            // Aşağıdan yukarıya doğru boşluk arıyoruz (y=0 en alt satır kabul ediyoruz)
+            int emptyY = 0; 
+
+            for (int y = 0; y < Height; y++)
+            {
+                Node currentNode = GetNode(x, y);
+
+                if (!currentNode.IsEmpty())
+                {
+                    // Eğer blok boşluktan daha yukarıdaysa, onu aşağı (emptyY'ye) çek
+                    if (y > emptyY)
+                    {
+                        Node targetNode = GetNode(x, emptyY);
+                        targetNode.Type = currentNode.Type; // Rengi aşağıya kopyala
+                        currentNode.Type = BlockType.None;  // Eski yeri boşalt
+
+                        moveMoves.Add(new BlockMoveData(x, y, x, emptyY));
+                    }
+                    emptyY++; // Bir sonraki olası boşluk bir üst satır
+                }
+            }
+        }
+
+        // Eğer hareket eden blok varsa View'a haber ver
+        if (moveMoves.Count > 0)
+        {
+            OnBlocksFell?.Invoke(moveMoves);
+        }
+    }
+
+
+    // Yerçekiminden sonra boş kalan tepe kısımları doldurur
+    public void FillEmptySpaces()
+    {
+        List<Node> newNodes = new List<Node>();
+
+        for (int x = 0; x < Width; x++)
+        {
+            for (int y = 0; y < Height; y++)
+            {
+                Node node = GetNode(x, y);
+                if (node.IsEmpty())
+                {
+                    // Yeni rastgele renk ata
+                    BlockType randomType = (BlockType)UnityEngine.Random.Range(1, 6);
+                    node.Type = randomType;
+                    newNodes.Add(node);
+                }
+            }
+        }
+
+        // Yeni bloklar oluştuysa View'a haber ver
+        if (newNodes.Count > 0)
+        {
+            OnNewBlocksSpawned?.Invoke(newNodes);
         }
     }
 }

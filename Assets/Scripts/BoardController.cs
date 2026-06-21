@@ -41,17 +41,21 @@ public class BoardController : MonoBehaviour
     {
         if (Input.GetMouseButtonDown(0))
         {
-            // Ekrana tıklandığında kameradan bir ışın gönder
             Ray ray = Camera.main.ScreenPointToRay(Input.mousePosition);
             if (Physics.Raycast(ray, out RaycastHit hit))
             {
-                // Tıklanan objede NodeView var mı kontrol et
                 NodeView clickedNode = hit.collider.GetComponent<NodeView>();
                 
                 if (clickedNode != null)
                 {
-                    // Modeldeki matematiksel BFS algoritmasını tetikle
-                    Model.CheckAndMatch(clickedNode.X, clickedNode.Y);
+                    // Patlatmayı dene. Eğer başarılıysa (true dönerse) yerçekimini ve yeni blokları tetikle!
+                    bool isMatched = Model.CheckAndMatch(clickedNode.X, clickedNode.Y);
+                    
+                    if (isMatched)
+                    {
+                        Model.ApplyGravity();
+                        Model.FillEmptySpaces();
+                    }
                 }
             }
         }

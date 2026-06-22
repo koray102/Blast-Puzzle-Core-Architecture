@@ -13,24 +13,36 @@ public class GridModel
     public event Action<List<Node>> OnNewBlocksSpawned;
 
 
-    public GridModel(int width, int height)
+    public GridModel(int width, int height, BlockType[,] initialBoard = null)
     {
         Width = width;
         Height = height;
         _grid = new Node[width, height];
-        InitializeGrid();
+        
+        InitializeGrid(initialBoard);
     }
 
 
-    private void InitializeGrid()
+    private void InitializeGrid(BlockType[,] initialBoard)
     {
         for (int x = 0; x < Width; x++)
         {
             for (int y = 0; y < Height; y++)
             {
-                // Şimdilik rastgele dolduruyoruz (Test için)
-                BlockType randomType = (BlockType)UnityEngine.Random.Range(1, 6);
-                _grid[x, y] = new Node(x, y, randomType);
+                Node node = new Node(x, y);
+
+                // Eğer dışarıdan manuel bir dizilim verildiyse onu kullan
+                if (initialBoard != null)
+                {
+                    node.Type = initialBoard[x, y];
+                }
+                else
+                {
+                    // Verilmediyse tamamen rastgele üret
+                    node.Type = (BlockType)UnityEngine.Random.Range(1, 6);
+                }
+
+                _grid[x, y] = node;
             }
         }
     }

@@ -6,7 +6,7 @@ public class LevelManager : MonoBehaviour
     public static LevelManager Instance { get; private set; }
 
     [Header("Level Configuration")]
-    [SerializeField] private LevelData currentLevelData;
+    [SerializeField] internal LevelData currentLevelData;
     
     private int _remainingMoves;
     private bool _isLevelEnded = false;
@@ -42,8 +42,7 @@ public class LevelManager : MonoBehaviour
         }
 
         // 1. Önce Tahtayı Kesin Olarak Oluştur!
-        // (İleride currentLevelData içinden levelWidth ve levelHeight değerlerini de okuyabiliriz)
-        BoardController.Instance.InitializeBoard(currentLevelData.boardWidth, currentLevelData.boardHeight);
+        BoardController.Instance.InitializeBoard(currentLevelData);
 
         // 2. SONRA UI'I KUR (Race Condition engellendi)
         GameplayUIManager.Instance.InitializeUI(currentLevelData.levelGoals, _remainingMoves);
@@ -62,7 +61,7 @@ public class LevelManager : MonoBehaviour
         {
             foreach (var goal in currentLevelData.levelGoals)
             {
-                Debug.Log($"update goal: {node.Type}");
+                //Debug.Log($"update goal: {node.Type}");
                 goal.UpdateGoal(node.Type);
             }
         }

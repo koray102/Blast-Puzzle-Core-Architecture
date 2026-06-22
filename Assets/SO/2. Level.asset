@@ -14,23 +14,18 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   nextLevel: {fileID: 0}
   boardWidth: 5
-  boardHeight: 5
-  totalMoves: 20
-  levelGoals:
-  - rid: 4486749017961398335
-  - rid: 4486749017961398336
+  boardHeight: 6
+  useManualSetup: 1
+  startingBoard:
+  - columns: 0000000000000000000000000000000000000000
+  - columns: 0000000000000000000000000000000000000000
+  - columns: 0000000000000000000000000000000000000000
+  - columns: 0000000001000000010000000100000000000000
+  - columns: 0000000000000000020000000200000000000000
+  - columns: 0000000000000000020000000000000000000000
+  totalMoves: 0
+  levelGoals: []
   availableColors: 010000000200000003000000
   references:
     version: 2
-    RefIds:
-    - rid: 4486749017961398335
-      type: {class: TotalBlockGoal, ns: , asm: Assembly-CSharp}
-      data:
-        goalIcon: {fileID: 10901, guid: 0000000000000000f000000000000000, type: 0}
-        targetAmount: 10
-    - rid: 4486749017961398336
-      type: {class: ColorGoal, ns: , asm: Assembly-CSharp}
-      data:
-        goalIcon: {fileID: 10913, guid: 0000000000000000f000000000000000, type: 0}
-        targetColor: 1
-        targetAmount: 5
+    RefIds: []

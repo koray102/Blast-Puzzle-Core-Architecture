@@ -24,15 +24,34 @@ public class BoardController : MonoBehaviour
     }
 
 
-    public void InitializeBoard(int width, int height)
+    public void InitializeBoard(LevelData levelData)
     {
         if (Model != null)
         {
             boardView.ClearBoard();
         }
-        
-        Model = new GridModel(width, height);
-        Debug.Log($"Model oluşturuldu: {width}x{height}");
+
+        BlockType[,] initialGrid = null;
+
+        // Eğer manuel kurulum isteniyorsa, BoardRow'u saf 2D matrise çevir
+        if (levelData.useManualSetup && levelData.startingBoard != null)
+        {
+            initialGrid = new BlockType[levelData.boardWidth, levelData.boardHeight];
+            
+            for (int x = 0; x < levelData.boardWidth; x++)
+            {
+                for (int y = 0; y < levelData.boardHeight; y++)
+                {
+                    // Unity'de inspector yukarıdan aşağı listelenir (Y ekseni ters olabilir). 
+                    // Y=0'ın en alt satır olmasını sağlamak için ufak bir çeviri yapıyoruz:
+                    int invertedY = (levelData.boardHeight - 1) - y;
+                    initialGrid[x, y] = levelData.startingBoard[invertedY].columns[x];
+                }
+            }
+        }
+
+        // Modeli manuel matris ile (veya null ise rastgele) ayağa kaldır
+        Model = new GridModel(levelData.boardWidth, levelData.boardHeight, initialGrid);
         
         boardView.BuildBoard(Model);
     }

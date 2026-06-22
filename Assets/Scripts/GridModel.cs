@@ -94,15 +94,15 @@ public class GridModel
         // En az 2 blok yan yanaysa patlar
         if (matchedNodes.Count >= 2)
         {
+            // VFX, SFX ve View için event fırlat
+            OnBlocksMatched?.Invoke(matchedNodes);
+
             // Modelden blokları temizle
             foreach (var node in matchedNodes)
             {
                 node.Type = BlockType.None;
                 node.IsMatched = false; // Sonraki turlar için reset
             }
-
-            // VFX, SFX ve View için event fırlat
-            OnBlocksMatched?.Invoke(matchedNodes);
 
             // Eşleşme BAŞARILI, Controller'a TRUE döndür
             return true;

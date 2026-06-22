@@ -27,15 +27,15 @@ public class BoardController : MonoBehaviour
         Instance = this;
     }
 
-    private void Start()
+
+    public void InitializeBoard(int width, int height)
     {
-        // 1. Matematiksel Modeli Oluştur
         Model = new GridModel(width, height);
         Debug.Log($"Model oluşturuldu: {width}x{height}");
         
-        // 2. Görsel Sistemi Tetikle ve Modeli Parametre Olarak Gönder
         boardView.BuildBoard(Model);
     }
+
 
     private void Update()
     {

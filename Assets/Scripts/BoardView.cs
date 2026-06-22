@@ -40,8 +40,36 @@ public class BoardView : MonoBehaviour
         }
     }
 
-    // ---> İŞTE EKSİK OLAN ORTAK METODUMUZ <---
-    // Her defasında spaciong offset matematiğini yazmamak için bir fonksiyona çıkardık.
+
+    public void ClearBoard()
+    {
+        if (_viewGrid == null) return;
+
+        // 1. Matristeki tüm objeleri bul ve havuza geri yolla
+        for (int x = 0; x < _viewGrid.GetLength(0); x++)
+        {
+            for (int y = 0; y < _viewGrid.GetLength(1); y++)
+            {
+                NodeView node = _viewGrid[x, y];
+                if (node != null)
+                {
+                    _pool.ReturnNode(node); // Objeyi gizler ve havuza ekler
+                    _viewGrid[x, y] = null;
+                }
+            }
+        }
+
+        // 2. Çok Kritik: Eski modelin eventlerinden çıkış yap!
+        // (Eğer bunu yapmazsan yeni levelda bloklar ikişer kere düşer)
+        if (BoardController.Instance != null && BoardController.Instance.Model != null)
+        {
+            BoardController.Instance.Model.OnBlocksMatched -= HandleBlocksMatched;
+            BoardController.Instance.Model.OnBlocksFell -= HandleBlocksFell;
+            BoardController.Instance.Model.OnNewBlocksSpawned -= HandleNewBlocksSpawned;
+        }
+    }
+
+
     private Vector3 CalculateWorldPosition(int x, int y)
     {
         // Model'in boyutlarını Controller üzerinden alıyoruz

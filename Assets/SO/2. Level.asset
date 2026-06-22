@@ -10,14 +10,15 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: ed95754c20e0d2e43b3eee9cf3501c80, type: 3}
-  m_Name: 1. Level
+  m_Name: 2. Level
   m_EditorClassIdentifier: 
-  nextLevel: {fileID: 11400000, guid: 46dd67efbf231154d910bf365b6aa6b4, type: 2}
+  nextLevel: {fileID: 0}
   boardWidth: 5
-  boardHeight: 6
-  totalMoves: 10
+  boardHeight: 5
+  totalMoves: 20
   levelGoals:
   - rid: 4486749017961398335
+  - rid: 4486749017961398336
   availableColors: 010000000200000003000000
   references:
     version: 2
@@ -27,3 +28,9 @@ MonoBehaviour:
       data:
         goalIcon: {fileID: 10901, guid: 0000000000000000f000000000000000, type: 0}
         targetAmount: 10
+    - rid: 4486749017961398336
+      type: {class: ColorGoal, ns: , asm: Assembly-CSharp}
+      data:
+        goalIcon: {fileID: 10913, guid: 0000000000000000f000000000000000, type: 0}
+        targetColor: 1
+        targetAmount: 5

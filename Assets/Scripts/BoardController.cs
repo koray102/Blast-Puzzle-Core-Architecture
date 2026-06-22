@@ -26,6 +26,11 @@ public class BoardController : MonoBehaviour
 
     public void InitializeBoard(int width, int height)
     {
+        if (Model != null)
+        {
+            boardView.ClearBoard();
+        }
+        
         Model = new GridModel(width, height);
         Debug.Log($"Model oluşturuldu: {width}x{height}");
         

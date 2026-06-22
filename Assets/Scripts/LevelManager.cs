@@ -31,6 +31,11 @@ public class LevelManager : MonoBehaviour
         _isLevelEnded = false;
         _remainingMoves = currentLevelData.totalMoves;
 
+        if (BoardController.Instance != null && BoardController.Instance.Model != null)
+        {
+            BoardController.Instance.Model.OnBlocksMatched -= HandleBlocksMatched;
+        }
+
         foreach (LevelGoal goal in currentLevelData.levelGoals)
         {
             goal.Init();
@@ -98,14 +103,35 @@ public class LevelManager : MonoBehaviour
     {
         _isLevelEnded = true;
         Debug.Log("TEBRİKLER! BÖLÜMÜ GEÇTİN!");
-        // İleride buraya UIManager.ShowWinPanel() gelecek
+        GameplayUIManager.Instance.ShowWinPanel();
     }
 
     private void LevelLost()
     {
         _isLevelEnded = true;
         Debug.Log("HAMLEN BİTTİ! KAYBETTİN!");
-        // İleride buraya UIManager.ShowLosePanel() gelecek
+        GameplayUIManager.Instance.ShowLosePanel();
+    }
+
+    public void RetryLevel()
+    {
+        // currentLevelData zaten aynı kalacak, sadece tahtayı ve UI'ı baştan kur
+        StartLevel();
+    }
+
+    public void LoadNextLevel()
+    {
+        if (currentLevelData.nextLevel != null)
+        {
+            // Veriyi bir sonraki bölüm ile değiştir ve baştan kur
+            currentLevelData = currentLevelData.nextLevel;
+            StartLevel();
+        }
+        else
+        {
+            Debug.Log("TEBRİKLER! OYUNDAKİ TÜM BÖLÜMLER BİTTİ!");
+            // Tüm oyun bittiyse Ana Menüye dönebilirsin
+        }
     }
 
     private void OnDestroy()

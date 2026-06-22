@@ -4,6 +4,9 @@ using UnityEngine;
 [CreateAssetMenu(fileName = "New Level", menuName = "Level Data")]
 public class LevelData : ScriptableObject
 {
+    [Header("Progression")]
+    public LevelData nextLevel;
+
     [Header("Board Settings")]
     public int boardWidth = 8;
     public int boardHeight = 10;

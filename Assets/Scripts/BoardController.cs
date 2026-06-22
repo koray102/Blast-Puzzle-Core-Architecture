@@ -9,10 +9,6 @@ public class BoardController : MonoBehaviour
     [SerializeField] private BoardView boardView;
     
 
-    [Header("Board Settings")]
-    [SerializeField] private int width = 8;
-    [SerializeField] private int height = 10;
-
     // Sadece Model'i tutuyor, mantık hesaplamıyor.
     public GridModel Model { get; private set; }
 

@@ -1,17 +1,19 @@
 using System;
 
 [Serializable]
-public class TotalBlockGoal : LevelGoal
+public class ColorGoal : LevelGoal
 {
+    public BlockType targetColor;
     public int targetAmount;
     private int _currentAmount = 0;
 
     public override void UpdateGoal(BlockType poppedBlockType)
     {
-        // Renge bakmadan her patlayan blokta sayacı artır
-        if (poppedBlockType != BlockType.None)
+        // Sadece kendi rengiyse sayacı artır
+        if (poppedBlockType == targetColor)
         {
             _currentAmount++;
+            OnGoalUpdated?.Invoke();
         }
     }
 

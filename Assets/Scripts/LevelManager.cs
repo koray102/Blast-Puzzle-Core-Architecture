@@ -40,6 +40,9 @@ public class LevelManager : MonoBehaviour
         // (İleride currentLevelData içinden levelWidth ve levelHeight değerlerini de okuyabiliriz)
         BoardController.Instance.InitializeBoard(currentLevelData.boardWidth, currentLevelData.boardHeight);
 
+        // 2. SONRA UI'I KUR (Race Condition engellendi)
+        GameplayUIManager.Instance.InitializeUI(currentLevelData.levelGoals, _remainingMoves);
+
         // 2. Tahta %100 oluştuğuna göre artık güvenle abone olabiliriz (Race Condition çözüldü)
         BoardController.Instance.Model.OnBlocksMatched += HandleBlocksMatched;
     }
@@ -61,7 +64,8 @@ public class LevelManager : MonoBehaviour
 
         // 2. Hamle sayısını düşür (Her patlatma 1 hamledir)
         _remainingMoves--;
-
+        GameplayUIManager.Instance.UpdateMoves(_remainingMoves);
+        
         // 3. Oyun bitti mi kontrol et
         CheckWinLoseCondition();
     }

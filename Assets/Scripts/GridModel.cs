@@ -62,6 +62,38 @@ public class GridModel
     {
         return x >= 0 && x < Width && y >= 0 && y < Height;
     }
+
+
+    // Oyuncunun tıkladığı yerin geçerli bir hamle olup olmadığını verileri silmeden kontrol eder
+    public bool CanMatch(int x, int y)
+    {
+        Node node = GetNode(x, y);
+        
+        // Tahta dışıysa veya doğrudan tıklanamayan bir engelse
+        if (node == null || node.Obstacle != ObstacleType.None) return false;
+        
+        // Eğer roket/bombaysa her türlü tıklanabilir
+        if (node.Booster != BoosterType.None) return true;
+        
+        // Eğer boşsa veya zaten eşleşmişse
+        if (node.ColorBlock == BlockType.None || node.IsMatched) return false;
+
+        // Etrafındaki 4 komşuyu kontrol et
+        int[] dx = { 0, 0, 1, -1 };
+        int[] dy = { 1, -1, 0, 0 };
+        
+        for (int i = 0; i < 4; i++)
+        {
+            Node neighbor = GetNode(node.X + dx[i], node.Y + dy[i]);
+            // Eğer komşu aynı renkse ve doğrudan bir kutu/engel değilse eşleşme MÜMKÜNDÜR
+            if (neighbor != null && neighbor.Obstacle == ObstacleType.None && neighbor.ColorBlock == node.ColorBlock)
+            {
+                return true; 
+            }
+        }
+        
+        return false;
+    }
     
 
     public bool CheckAndMatch(int startX, int startY)

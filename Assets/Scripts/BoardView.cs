@@ -90,18 +90,73 @@ public class BoardView : MonoBehaviour
     }
 
     // --- EVENT DİNLEYİCİLERİ (OBSERVERS) ---
+    
+    // Manuel kilitleme için yardımcı metodlar
+    public void LockState() => _activeAnimations++;
+    public void UnlockState() { _activeAnimations--; CheckAndUnlockState(); }
 
     private void HandleBlocksMatched(List<Node> matchedNodes)
     {
+        // Hangi bloğun, hangi yöne itileceğini tutacağımız liste
+        Dictionary<NodeView, Vector3> knockbackVectors = new Dictionary<NodeView, Vector3>();
+
+        // 1. ADIM: İTİLME YÖNLERİNİ HESAPLA
+        foreach (Node node in matchedNodes)
+        {
+            int[] dx = { 0, 0, 1, -1 };
+            int[] dy = { 1, -1, 0, 0 };
+
+            for (int i = 0; i < 4; i++)
+            {
+                int nx = node.X + dx[i];
+                int ny = node.Y + dy[i];
+
+                if (BoardController.Instance.Model.IsValidPosition(nx, ny))
+                {
+                    // Eğer komşu hücre patlamıyorsa itilmelidir
+                    bool isNeighborExploding = matchedNodes.Exists(n => n.X == nx && n.Y == ny);
+                    if (!isNeighborExploding)
+                    {
+                        NodeView neighborView = _viewGrid[nx, ny];
+                        if (neighborView != null)
+                        {
+                            // Yön hesabı: Komşunun Konumu (nx) - Patlayan Konumu (node.X)
+                            Vector3 pushDir = new Vector3(dx[i], dy[i], 0);
+
+                            if (!knockbackVectors.ContainsKey(neighborView))
+                                knockbackVectors[neighborView] = Vector3.zero;
+
+                            // Eğer blok 2 ayrı patlamanın ortasındaysa vektörler toplanıp ÇAPRAZ tepme oluşturur!
+                            knockbackVectors[neighborView] += pushDir; 
+                        }
+                    }
+                }
+            }
+        }
+
+        // 2. ADIM: PATLAYANLARI GİZLE (Eski kodun aynısı)
         foreach (Node node in matchedNodes)
         {
             NodeView viewToHide = _viewGrid[node.X, node.Y];
-            
             if (viewToHide != null)
             {
-                _pool.ReturnNode(viewToHide); // Görseli kapat ve havuza yolla
-                _viewGrid[node.X, node.Y] = null; // Matristen sil
+                _pool.ReturnNode(viewToHide); 
+                _viewGrid[node.X, node.Y] = null; 
             }
+        }
+
+        // 3. ADIM: GERİ TEPMELERİ UYGULA
+        foreach (var kvp in knockbackVectors)
+        {
+            NodeView view = kvp.Key;
+            Vector3 pushDirection = kvp.Value.normalized; // Vektörü normalize et ki çaprazlar çok uzağa uçmasın
+
+            _activeAnimations++;
+            view.PlayKnockback(pushDirection, () => 
+            {
+                _activeAnimations--; 
+                CheckAndUnlockState();
+            });
         }
     }
 

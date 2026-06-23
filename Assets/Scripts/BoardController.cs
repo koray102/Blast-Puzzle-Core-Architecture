@@ -76,21 +76,39 @@ public class BoardController : MonoBehaviour
                 
                 if (clickedNode != null)
                 {
-                    // Patlatmayı dene. Eğer başarılıysa (true dönerse) yerçekimini ve yeni blokları tetikle!
-                    bool isMatched = Model.CheckAndMatch(clickedNode.X, clickedNode.Y);
-                    
-                    if (isMatched)
+                    // YENİ: Patlatmadan önce "Bu hamle geçerli mi?" diye sor
+                    if (Model.CanMatch(clickedNode.X, clickedNode.Y))
                     {
                         SetState(GameState.Processing);
                         boardView.ResetAnimationCounter();
+                        
+                        // Orkestra kilitlendi
+                        boardView.LockState(); 
 
-                        Model.ApplyGravity();
-                        Model.FillEmptySpaces();
-
-                        boardView.CheckAndUnlockState();
+                        // 1. Önce tıklanan bloku şişir (Pump)
+                        clickedNode.PlayPumpAnimation(() =>
+                        {
+                            // 2. Şişme bitince patlamayı tetikle (Knockback'ler bu satırda başlayacak)
+                            Model.CheckAndMatch(clickedNode.X, clickedNode.Y);
+                            
+                            // 3. Yerçekimini hemen çalıştırma! Geri tepmelerin görünmesi için ufak bir es ver
+                            StartCoroutine(GravityDelayRoutine());
+                        });
                     }
                 }
             }
         }
+    }
+
+    // Geri tepme hissini (Game Feel) oyuncuya yaşatmak için kritik bekleme anı
+    private System.Collections.IEnumerator GravityDelayRoutine()
+    {
+        yield return new WaitForSeconds(0.12f); // Patlama ile düşme arasındaki o sihirli boşluk
+
+        Model.ApplyGravity();
+        Model.FillEmptySpaces();
+        
+        // Orkestra kilidini aç (Knockback'ler veya düşmeler sürüyorsa View kendi içindeki sayaçla beklemeye devam eder)
+        boardView.UnlockState(); 
     }
 }

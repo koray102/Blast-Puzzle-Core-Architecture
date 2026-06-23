@@ -18,23 +18,7 @@ MonoBehaviour:
   useManualSetup: 1
   startingBoard:
   - columns:
-    - colorBlock: 3
-      obstacle: 0
-      booster: 0
-    - colorBlock: 2
-      obstacle: 0
-      booster: 0
-    - colorBlock: 2
-      obstacle: 0
-      booster: 0
-    - colorBlock: 2
-      obstacle: 0
-      booster: 0
-    - colorBlock: 3
-      obstacle: 0
-      booster: 0
-  - columns:
-    - colorBlock: 3
+    - colorBlock: 1
       obstacle: 0
       booster: 0
     - colorBlock: 1
@@ -46,7 +30,7 @@ MonoBehaviour:
     - colorBlock: 1
       obstacle: 0
       booster: 0
-    - colorBlock: 3
+    - colorBlock: 1
       obstacle: 0
       booster: 0
   - columns:
@@ -54,6 +38,22 @@ MonoBehaviour:
       obstacle: 0
       booster: 0
     - colorBlock: 1
+      obstacle: 0
+      booster: 0
+    - colorBlock: 2
+      obstacle: 0
+      booster: 0
+    - colorBlock: 1
+      obstacle: 0
+      booster: 0
+    - colorBlock: 1
+      obstacle: 0
+      booster: 0
+  - columns:
+    - colorBlock: 1
+      obstacle: 0
+      booster: 0
+    - colorBlock: 2
       obstacle: 0
       booster: 0
     - colorBlock: 0
@@ -62,39 +62,39 @@ MonoBehaviour:
     - colorBlock: 1
       obstacle: 0
       booster: 0
-    - colorBlock: 2
-      obstacle: 0
-      booster: 0
-  - columns:
-    - colorBlock: 2
-      obstacle: 0
-      booster: 0
-    - colorBlock: 3
-      obstacle: 0
-      booster: 0
     - colorBlock: 0
-      obstacle: 1
-      booster: 0
-    - colorBlock: 3
       obstacle: 0
-      booster: 0
-    - colorBlock: 3
-      obstacle: 0
-      booster: 0
+      booster: 1
   - columns:
-    - colorBlock: 2
+    - colorBlock: 1
       obstacle: 0
       booster: 0
     - colorBlock: 1
       obstacle: 0
       booster: 0
-    - colorBlock: 3
+    - colorBlock: 1
       obstacle: 0
       booster: 0
-    - colorBlock: 2
-      obstacle: 2
+    - colorBlock: 1
+      obstacle: 0
       booster: 0
-    - colorBlock: 2
+    - colorBlock: 1
+      obstacle: 0
+      booster: 0
+  - columns:
+    - colorBlock: 1
+      obstacle: 0
+      booster: 0
+    - colorBlock: 1
+      obstacle: 0
+      booster: 0
+    - colorBlock: 1
+      obstacle: 0
+      booster: 0
+    - colorBlock: 1
+      obstacle: 0
+      booster: 0
+    - colorBlock: 1
       obstacle: 0
       booster: 0
   totalMoves: 10

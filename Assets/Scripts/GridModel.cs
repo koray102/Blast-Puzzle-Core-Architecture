@@ -310,7 +310,7 @@ public class GridModel
         List<Node> nodesToDestroy = new List<Node>();
         List<Node> bubblesToPop = new List<Node>();
         
-        // Zincirleme reaksiyonları yönetmek için kuyruk (Queue) kullanıyoruz
+        // Zincirleme reaksiyonları yönetmek için kuyruk (Queue)
         Queue<Node> boostersToTrigger = new Queue<Node>();
 
         boostersToTrigger.Enqueue(startBooster);
@@ -320,53 +320,127 @@ public class GridModel
         {
             Node currentBooster = boostersToTrigger.Dequeue();
             
-            // Roketin kendisini de yok edilecekler listesine ekle
+            // Booster'ın kendisini de yok edilecekler listesine ekle
             nodesToDestroy.Add(currentBooster);
 
-            // Hedef hattı belirle
+            // Hedef alanı belirle
             List<Node> targetNodes = new List<Node>();
 
             if (currentBooster.Booster == BoosterType.RocketHorizontal)
             {
-                // Yatay eksendeki tüm hücreleri hedefe al
+                // Yatay ekseni hedefe al
                 for (int x = 0; x < Width; x++) targetNodes.Add(GetNode(x, currentBooster.Y));
             }
             else if (currentBooster.Booster == BoosterType.RocketVertical)
             {
-                // Dikey eksendeki tüm hücreleri hedefe al
+                // Dikey ekseni hedefe al
                 for (int y = 0; y < Height; y++) targetNodes.Add(GetNode(currentBooster.X, y));
             }
+            else if (currentBooster.Booster == BoosterType.Bomb) // BOMBA MANTIĞI (3x3 ALAN)
+            {
+                // Merkezden 1 birim sağ/sol ve aşağı/yukarı tarama yap
+                for (int x = currentBooster.X - 1; x <= currentBooster.X + 1; x++)
+                {
+                    for (int y = currentBooster.Y - 1; y <= currentBooster.Y + 1; y++)
+                    {
+                        Node targetNode = GetNode(x, y);
+                        // Eğer tahta dışına çıkmadıysa hedeflere ekle
+                        if (targetNode != null)
+                        {
+                            targetNodes.Add(targetNode);
+                        }
+                    }
+                }
+            }else if (currentBooster.Booster == BoosterType.DiscoBall)
+            {
+                // 1. Tahtada en çok bulunan rengi bul
+                BlockType targetColor = GetMostAbundantColor();
 
-            // Hedef hattındaki objeleri incele ve karar ver
+                // 2. O renkteki tüm hücreleri hedefe al
+                for (int x = 0; x < Width; x++)
+                {
+                    for (int y = 0; y < Height; y++)
+                    {
+                        Node targetNode = GetNode(x, y);
+                        
+                        // Eğer hücrede aradığımız renk varsa (Üstünde balon olsa bile ColorBlock durduğu için eşleşir)
+                        if (targetNode != null && targetNode.ColorBlock == targetColor)
+                        {
+                            targetNodes.Add(targetNode);
+                        }
+                    }
+                }
+            }
+
+            // Hedef hattındaki objeleri incele ve karar ver (Bu kısım hiç değişmiyor!)
             foreach (Node target in targetNodes)
             {
-                // Tahta dışıysa veya zaten bu reaksiyonda işleme alındıysa atla
                 if (target == null || target.IsMatched) continue;
-
-                // Boşlukları es geçmek performansı artırır
                 if (target.IsEmpty()) continue;
 
                 target.IsMatched = true;
 
                 if (target.Obstacle == ObstacleType.Bubble)
                 {
-                    // Balonsa sadece zarı patlatılır
-                    bubblesToPop.Add(target);
+                    bubblesToPop.Add(target); // Sadece zarı patlar
                 }
                 else if (target.Booster != BoosterType.None)
                 {
-                    // ZİNCİRLEME REAKSİYON: Roket başka bir roketi vurursa o da kuyruğa girip ateşlenir!
+                    // ZİNCİRLEME REAKSİYON: Bomba roketin ucuna değerse, roketi ateşler!
                     boostersToTrigger.Enqueue(target);
                 }
                 else
                 {
-                    // Kutuysa veya renkli bloksa tamamen yok edilir
-                    nodesToDestroy.Add(target);
+                    nodesToDestroy.Add(target); // Kutu veya Renk yok olur
                 }
             }
         }
 
         // Toplanan tüm hedefleri tek seferde temizle ve eventleri fırlat
         ExecuteDestruction(nodesToDestroy, bubblesToPop);
+    }
+
+
+    // Tahtadaki en popüler rengi bulan yardımcı metod
+    private BlockType GetMostAbundantColor()
+    {
+        Dictionary<BlockType, int> colorCounts = new Dictionary<BlockType, int>();
+
+        for (int x = 0; x < Width; x++)
+        {
+            for (int y = 0; y < Height; y++)
+            {
+                Node node = GetNode(x, y);
+                // Sadece rengi olan blokları sayıyoruz (Boşlukları veya salt engelleri saymıyoruz)
+                if (node != null && node.ColorBlock != BlockType.None)
+                {
+                    if (!colorCounts.ContainsKey(node.ColorBlock))
+                    {
+                        colorCounts[node.ColorBlock] = 0;
+                    }
+                    colorCounts[node.ColorBlock]++;
+                }
+            }
+        }
+
+        BlockType mostAbundant = BlockType.None;
+        int maxCount = 0;
+
+        foreach (var pair in colorCounts)
+        {
+            if (pair.Value > maxCount)
+            {
+                maxCount = pair.Value;
+                mostAbundant = pair.Key;
+            }
+        }
+
+        // Eğer haritada hiç renk kalmamışsa (çok nadir edge-case) rastgele bir renk seç
+        if (mostAbundant == BlockType.None)
+        {
+            mostAbundant = (BlockType)UnityEngine.Random.Range(1, 6);
+        }
+
+        return mostAbundant;
     }
 }

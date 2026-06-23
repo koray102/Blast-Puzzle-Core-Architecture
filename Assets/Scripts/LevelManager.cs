@@ -100,6 +100,7 @@ public class LevelManager : MonoBehaviour
     private void LevelWon()
     {
         _isLevelEnded = true;
+        BoardController.Instance.SetState(GameState.GameOver);
         Debug.Log("TEBRİKLER! BÖLÜMÜ GEÇTİN!");
         GameplayUIManager.Instance.ShowWinPanel();
     }
@@ -107,6 +108,7 @@ public class LevelManager : MonoBehaviour
     private void LevelLost()
     {
         _isLevelEnded = true;
+        BoardController.Instance.SetState(GameState.GameOver);
         Debug.Log("HAMLEN BİTTİ! KAYBETTİN!");
         GameplayUIManager.Instance.ShowLosePanel();
     }

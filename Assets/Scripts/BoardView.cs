@@ -174,7 +174,10 @@ public class BoardView : MonoBehaviour
             _activeAnimations = 0; // Negatife düşmemesi için garantiye alıyoruz
             if (BoardController.Instance != null)
             {
-                BoardController.Instance.SetState(GameState.WaitingForInput);
+                if (BoardController.Instance.State == GameState.Processing)
+                {
+                    BoardController.Instance.SetState(GameState.WaitingForInput);
+                }
             }
         }
     }

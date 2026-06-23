@@ -45,6 +45,13 @@ public class GridModel
                     node.ColorBlock = (BlockType)UnityEngine.Random.Range(1, 6);
                 }
 
+                if (node.ColorBlock == BlockType.None && 
+                    node.Obstacle == ObstacleType.None && 
+                    node.Booster == BoosterType.None)
+                {
+                    node.ColorBlock = (BlockType)UnityEngine.Random.Range(1, 6);
+                }
+
                 _grid[x, y] = node;
             }
         }

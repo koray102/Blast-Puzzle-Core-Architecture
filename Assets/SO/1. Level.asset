@@ -18,13 +18,13 @@ MonoBehaviour:
   useManualSetup: 1
   startingBoard:
   - columns:
-    - colorBlock: 1
+    - colorBlock: 3
       obstacle: 0
       booster: 0
-    - colorBlock: 1
+    - colorBlock: 3
       obstacle: 0
       booster: 0
-    - colorBlock: 1
+    - colorBlock: 3
       obstacle: 0
       booster: 0
     - colorBlock: 1
@@ -37,7 +37,10 @@ MonoBehaviour:
     - colorBlock: 1
       obstacle: 0
       booster: 0
-    - colorBlock: 1
+    - colorBlock: 0
+      obstacle: 1
+      booster: 0
+    - colorBlock: 2
       obstacle: 0
       booster: 0
     - colorBlock: 2
@@ -46,9 +49,6 @@ MonoBehaviour:
     - colorBlock: 1
       obstacle: 0
       booster: 0
-    - colorBlock: 1
-      obstacle: 0
-      booster: 0
   - columns:
     - colorBlock: 1
       obstacle: 0
@@ -56,42 +56,42 @@ MonoBehaviour:
     - colorBlock: 2
       obstacle: 0
       booster: 0
-    - colorBlock: 0
+    - colorBlock: 3
       obstacle: 0
-      booster: 2
-    - colorBlock: 1
+      booster: 0
+    - colorBlock: 2
       obstacle: 0
       booster: 0
     - colorBlock: 0
-      obstacle: 0
-      booster: 1
-  - columns:
-    - colorBlock: 1
-      obstacle: 0
-      booster: 0
-    - colorBlock: 1
-      obstacle: 0
-      booster: 0
-    - colorBlock: 1
-      obstacle: 0
-      booster: 0
-    - colorBlock: 1
-      obstacle: 0
-      booster: 0
-    - colorBlock: 1
-      obstacle: 0
+      obstacle: 1
       booster: 0
   - columns:
-    - colorBlock: 1
+    - colorBlock: 2
+      obstacle: 0
+      booster: 0
+    - colorBlock: 0
+      obstacle: 1
+      booster: 0
+    - colorBlock: 3
+      obstacle: 0
+      booster: 0
+    - colorBlock: 3
+      obstacle: 0
+      booster: 0
+    - colorBlock: 0
+      obstacle: 1
+      booster: 0
+  - columns:
+    - colorBlock: 0
+      obstacle: 1
+      booster: 0
+    - colorBlock: 2
       obstacle: 0
       booster: 0
     - colorBlock: 1
       obstacle: 0
       booster: 0
-    - colorBlock: 1
-      obstacle: 0
-      booster: 0
-    - colorBlock: 1
+    - colorBlock: 3
       obstacle: 0
       booster: 0
     - colorBlock: 1
@@ -99,13 +99,20 @@ MonoBehaviour:
       booster: 0
   totalMoves: 10
   levelGoals:
-  - rid: 4486749017961398335
+  - rid: 4486749039363358783
+  - rid: 4486749039363358784
   availableColors: 010000000200000003000000
   references:
     version: 2
     RefIds:
-    - rid: 4486749017961398335
+    - rid: 4486749039363358783
+      type: {class: ObstacleGoal, ns: , asm: Assembly-CSharp}
+      data:
+        goalIcon: {fileID: 10911, guid: 0000000000000000f000000000000000, type: 0}
+        targetObstacle: 1
+        targetAmount: 4
+    - rid: 4486749039363358784
       type: {class: TotalBlockGoal, ns: , asm: Assembly-CSharp}
       data:
-        goalIcon: {fileID: 10901, guid: 0000000000000000f000000000000000, type: 0}
-        targetAmount: 30
+        goalIcon: {fileID: 10913, guid: 0000000000000000f000000000000000, type: 0}
+        targetAmount: 25

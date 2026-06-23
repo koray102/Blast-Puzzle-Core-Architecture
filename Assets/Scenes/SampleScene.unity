@@ -387,7 +387,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   m_Material: {fileID: 0}
-  m_Color: {r: 1, g: 0.25490198, b: 0, a: 0.392}
+  m_Color: {r: 1, g: 0.58431375, b: 0, a: 1}
   m_RaycastTarget: 1
   m_RaycastPadding: {x: 0, y: 0, z: 0, w: 0}
   m_Maskable: 1
@@ -1633,7 +1633,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   blockFactory: {fileID: 1563546524}
   _pool: {fileID: 1563546525}
-  spacing: 1.05
+  spacing: 1.01
 --- !u!1 &1672182396
 GameObject:
   m_ObjectHideFlags: 0

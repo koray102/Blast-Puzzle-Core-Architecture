@@ -113,9 +113,16 @@ MonoBehaviour:
     - colorBlock: 0
       obstacle: 0
       booster: 0
-  totalMoves: 0
-  levelGoals: []
+  totalMoves: 10
+  levelGoals:
+  - rid: 4486749039363358785
   availableColors: 010000000200000003000000
   references:
     version: 2
-    RefIds: []
+    RefIds:
+    - rid: 4486749039363358785
+      type: {class: ColorGoal, ns: , asm: Assembly-CSharp}
+      data:
+        goalIcon: {fileID: 10911, guid: 0000000000000000f000000000000000, type: 0}
+        targetColor: 1
+        targetAmount: 20

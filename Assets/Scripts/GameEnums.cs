@@ -28,5 +28,6 @@ public enum GameState
 { 
     WaitingForInput, 
     Processing, 
+    Paused, 
     GameOver 
 }

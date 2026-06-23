@@ -15,6 +15,17 @@ public class BoardController : MonoBehaviour
     public void SetState(GameState newState)
     {
         State = newState;
+        
+        // Oyun duraklatıldığında Unity'nin fizik ve animasyon zamanını dondur
+        if (State == GameState.Paused)
+        {
+            Time.timeScale = 0f;
+        }
+        // Duraklatma bitip başka bir state'e geçildiğinde zamanı normale döndür
+        else if (Time.timeScale == 0f)
+        {
+            Time.timeScale = 1f;
+        }
     }
     
 

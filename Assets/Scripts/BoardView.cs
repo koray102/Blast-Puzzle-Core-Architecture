@@ -11,6 +11,8 @@ public class BoardView : MonoBehaviour
     [SerializeField] private float spacing = 1.05f;
     
     private NodeView[,] _viewGrid;
+    private int _activeAnimations = 0;
+
 
     public void BuildBoard(GridModel model)
     {
@@ -103,6 +105,25 @@ public class BoardView : MonoBehaviour
         }
     }
 
+    // Her tıklamada sayacı sıfırlamak için güvenlik metodu
+    public void ResetAnimationCounter()
+    {
+        _activeAnimations = 0;
+    }
+
+    // Sayaç sıfırlandıysa kilidi açan merkez
+    public void CheckAndUnlockState()
+    {
+        if (_activeAnimations <= 0)
+        {
+            _activeAnimations = 0; // Negatife düşmemesi için garantiye alıyoruz
+            if (BoardController.Instance != null)
+            {
+                BoardController.Instance.SetState(GameState.WaitingForInput);
+            }
+        }
+    }
+
     private void HandleBlocksFell(List<BlockMoveData> moveDataList)
     {
         foreach (var moveData in moveDataList)
@@ -112,34 +133,39 @@ public class BoardView : MonoBehaviour
 
             Vector3 targetPos = CalculateWorldPosition(moveData.ToX, moveData.ToY);
 
-            // Matrisi Güncelle
             _viewGrid[moveData.FromX, moveData.FromY] = null;
             _viewGrid[moveData.ToX, moveData.ToY] = blockToMove;
-
-            // X ve Y etiketlerini güncelle ve Hareketi Tetikle
             blockToMove.UpdateCoordinates(moveData.ToX, moveData.ToY);
-            blockToMove.MoveTo(targetPos);
+
+            // DEĞİŞİKLİK: Sayacı artır ve hareketi başlat
+            _activeAnimations++;
+            blockToMove.MoveTo(targetPos, () => 
+            {
+                _activeAnimations--; // Hareket bitince sayacı düşür
+                CheckAndUnlockState(); // Sıfırlandıysa kilidi aç
+            });
         }
     }
 
     private void HandleNewBlocksSpawned(List<Node> newNodes)
     {
-        // Tahtanın yüksekliğini alıyoruz ki en tepe noktasını bulabilelim
         int height = BoardController.Instance.Model.Height;
 
         foreach (var node in newNodes)
         {
             Vector3 targetPos = CalculateWorldPosition(node.X, node.Y);
-            
-            // Yeni bloğun doğuş noktası: Aynı X hizasında, ama tahtanın 1-2 birim üstünde (Height + 1)
             Vector3 spawnPos = CalculateWorldPosition(node.X, height + 1); 
 
-            // Fabrikadan üret
             NodeView newBlock = blockFactory.SpawnBlock(node, spawnPos);
             _viewGrid[node.X, node.Y] = newBlock;
 
-            // Yukarıdan asıl hedefine doğru düşme hareketini tetikle
-            newBlock.MoveTo(targetPos);
+            // DEĞİŞİKLİK: Sayacı artır ve hareketi başlat
+            _activeAnimations++;
+            newBlock.MoveTo(targetPos, () => 
+            {
+                _activeAnimations--; // Hareket bitince sayacı düşür
+                CheckAndUnlockState(); // Sıfırlandıysa kilidi aç
+            });
         }
     }
 

@@ -1,3 +1,4 @@
+using System;
 using System.Collections;
 using UnityEngine;
 
@@ -63,30 +64,26 @@ public class NodeView : MonoBehaviour
 
 
     // Dışarıdan tetiklenecek hareket fonksiyonu
-    public void MoveTo(Vector3 targetPos)
+    public void MoveTo(Vector3 targetPos, Action onComplete = null)
     {
-        // Eğer obje zaten hareket halindeyse eski hareketi durdur (Bugları önler)
         if (_moveRoutine != null)
         {
             StopCoroutine(_moveRoutine);
         }
-        _moveRoutine = StartCoroutine(MoveRoutine(targetPos));
+        _moveRoutine = StartCoroutine(MoveRoutine(targetPos, onComplete));
     }
 
-
-    // Sabit hızla hedefe ilerleme mantığı
-    private IEnumerator MoveRoutine(Vector3 targetPos)
+    private IEnumerator MoveRoutine(Vector3 targetPos, Action onComplete)
     {
-        // Hedef pozisyona varana kadar her frame'de çalışır
         while (Vector3.Distance(transform.position, targetPos) > 0.01f)
         {
-            // MoveTowards tam olarak sabit hız (linear) sağlar
             transform.position = Vector3.MoveTowards(transform.position, targetPos, fallSpeed * Time.deltaTime);
-            yield return null; 
+            yield return null;
         }
         
-        // Döngü bitince objeyi tam yerine oturt ve rutini temizle
-        transform.position = targetPos;
-        _moveRoutine = null;
+        transform.position = targetPos; // Tam hedefe oturt
+        
+        // DEĞİŞİKLİK: Animasyon bitti! Görevi verene "İşim Bitti!" diye bağır
+        onComplete?.Invoke();
     }
 }

@@ -1,9 +1,9 @@
 using UnityEngine;
 
+
 public class BoardController : MonoBehaviour
 {
     public static BoardController Instance { get; private set; }
-
 
     [Header("Reference Settings")]
     [SerializeField] private BoardView boardView;
@@ -11,6 +11,12 @@ public class BoardController : MonoBehaviour
 
     // Sadece Model'i tutuyor, mantık hesaplamıyor.
     public GridModel Model { get; private set; }
+    public GameState State { get; private set; } = GameState.WaitingForInput;
+    public void SetState(GameState newState)
+    {
+        State = newState;
+    }
+    
 
     private void Awake()
     {
@@ -50,13 +56,17 @@ public class BoardController : MonoBehaviour
 
         // Modeli yeni veri tipiyle ayağa kaldırıyoruz
         Model = new GridModel(levelData.boardWidth, levelData.boardHeight, initialGrid);
-        
         boardView.BuildBoard(Model);
+        
+        // Tahta kurulduğunda kilidi aç
+        SetState(GameState.WaitingForInput);
     }
 
 
     private void Update()
     {
+        if (State != GameState.WaitingForInput) return;
+
         if (Input.GetMouseButtonDown(0))
         {
             Ray ray = Camera.main.ScreenPointToRay(Input.mousePosition);
@@ -71,8 +81,13 @@ public class BoardController : MonoBehaviour
                     
                     if (isMatched)
                     {
+                        SetState(GameState.Processing);
+                        boardView.ResetAnimationCounter();
+
                         Model.ApplyGravity();
                         Model.FillEmptySpaces();
+
+                        boardView.CheckAndUnlockState();
                     }
                 }
             }

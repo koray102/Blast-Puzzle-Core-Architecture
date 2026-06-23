@@ -23,3 +23,10 @@ public enum BoosterType
     Bomb = 3,
     DiscoBall = 4
 }
+
+public enum GameState 
+{ 
+    WaitingForInput, 
+    Processing, 
+    GameOver 
+}

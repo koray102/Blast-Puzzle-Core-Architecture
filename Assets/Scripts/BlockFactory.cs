@@ -19,23 +19,14 @@ public class BlockFactory : MonoBehaviour
 
     private Color GetColorForNode(Node node)
     {
-        // ÖNCELİK SIRALAMASI: Hücrede önce ne görünmeli?
+        if (node.Obstacle == ObstacleType.Box) return new Color(0.45f, 0.25f, 0.1f);
+        if (node.Obstacle == ObstacleType.Bubble) return new Color(0.7f, 0.9f, 1f); 
         
-        // 1. Eğer hücrede sabit bir Kutu (Box) varsa kahverengi yap
-        if (node.Obstacle == ObstacleType.Box)
-        {
-            return new Color(0.45f, 0.25f, 0.1f); // Ahşap/Kutu rengi
-        }
+        // GÜÇLENDİRİCİ RENKLERİ
+        if (node.Booster == BoosterType.RocketHorizontal || node.Booster == BoosterType.RocketVertical) return Color.cyan;
+        if (node.Booster == BoosterType.Bomb) return Color.black;       // Bomba Siyah olsun
+        if (node.Booster == BoosterType.DiscoBall) return Color.magenta; // Disko Topu Mor/Pembe (Magenta) olsun
 
-        if (node.Obstacle == ObstacleType.Bubble) return new Color(0.7f, 0.9f, 1f);
-
-        // 2. Eğer hücrede bir Booster varsa (Örn: Roket) camgöbeği yap
-        if (node.Booster != BoosterType.None)
-        {
-            return Color.cyan; 
-        }
-
-        // 3. Hiçbiri yoksa normal renkli bloğu bas
         return GetColorForType(node.ColorBlock);
     }
 

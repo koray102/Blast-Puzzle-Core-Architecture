@@ -124,12 +124,26 @@ public class GridModel
         }
 
         // En az 2 blok yan yanaysa patlar
+        // En az 2 blok yan yanaysa patlar
         if (matchedNodes.Count >= 2)
         {
-            // ETRAFINDAKİ ENGELLERİ (KUTU VE BALON) BUL
             List<Node> affectedObstacles = new List<Node>();
-            List<Node> poppedBubbles = new List<Node>(); 
+            List<Node> nodesToUpdate = new List<Node>(); // İsim değişti
 
+            // --- BOOSTER ÜRETİM (SPAWN) MANTIĞI ---
+            int matchCount = matchedNodes.Count;
+            BoosterType boosterToSpawn = BoosterType.None;
+
+            if (matchCount >= 9) boosterToSpawn = BoosterType.DiscoBall;
+            else if (matchCount >= 7) boosterToSpawn = BoosterType.Bomb;
+            else if (matchCount >= 5)
+            {
+                // Roketin yönünü %50 ihtimalle rastgele belirliyoruz
+                boosterToSpawn = UnityEngine.Random.value > 0.5f ? BoosterType.RocketHorizontal : BoosterType.RocketVertical;
+            }
+            // -------------------------------------
+
+            // (Kutu ve balon bulma döngüsü aynı kalıyor...)
             foreach (Node matchedNode in matchedNodes)
             {
                 for (int i = 0; i < 4; i++)
@@ -145,24 +159,34 @@ public class GridModel
                 }
             }
 
-            // Engelleri tiplerine göre ayır
             foreach (Node obstacleNode in affectedObstacles)
             {
                 if (obstacleNode.Obstacle == ObstacleType.Box)
                 {
-                    // Kutu tamamen yok olur, silinmesi için ana listeye ekle
                     if (!matchedNodes.Contains(obstacleNode)) matchedNodes.Add(obstacleNode);
                 }
                 else if (obstacleNode.Obstacle == ObstacleType.Bubble)
                 {
-                    // Balon sadece zarını kaybeder, bloğa dokunulmaz
-                    poppedBubbles.Add(obstacleNode);
+                    nodesToUpdate.Add(obstacleNode);
                 }
             }
 
-            // ORTAK TEMİZLEYİCİYİ ÇAĞIR (Verileri silme, event fırlatma işlemleri burada yapılır)
-            ExecuteDestruction(matchedNodes, poppedBubbles);
+            // --- YENİ EKLENEN KISIM: TIKLANAN NOKTAYI BOOSTER'A DÖNÜŞTÜR ---
+            if (boosterToSpawn != BoosterType.None)
+            {
+                // 1. Tıklanan bloğu silinmekten kurtar
+                matchedNodes.Remove(startNode);
+                
+                // 2. Verisini güncelle
+                startNode.ColorBlock = BlockType.None;
+                startNode.Booster = boosterToSpawn;
+                
+                // 3. Görselinin "Booster Rengine" dönmesi için güncelleme listesine ekle
+                nodesToUpdate.Add(startNode); 
+            }
+            // ----------------------------------------------------------------
 
+            ExecuteDestruction(matchedNodes, nodesToUpdate);
             return true;
         }
         else
@@ -271,15 +295,13 @@ public class GridModel
 
    
     // Hem normal eşleşmelerin hem de roket/bomba patlamalarının ortak temizlik noktası
-    private void ExecuteDestruction(List<Node> nodesToDestroy, List<Node> bubblesToPop)
+    private void ExecuteDestruction(List<Node> nodesToDestroy, List<Node> nodesToUpdate)
     {
-        // 1. Manager'lar ve hedefler (Goals) okusun diye event fırlat
         if (nodesToDestroy.Count > 0)
         {
             OnBlocksMatched?.Invoke(nodesToDestroy);
         }
 
-        // 2. Yok olanların verilerini tamamen sil (Roketler, Kutular, Renkler)
         foreach (Node node in nodesToDestroy)
         {
             node.ColorBlock = BlockType.None;
@@ -292,15 +314,19 @@ public class GridModel
             node.IsMatched = false;
         }
 
-        // 3. Balonları patlat ve görsel güncelleme event'ini fırlat
-        if (bubblesToPop.Count > 0)
+        // Görseli güncellenecek (Silinmeyecek) hücreler: Balonlar ve Yeni Boosterlar
+        if (nodesToUpdate.Count > 0)
         {
-            foreach (Node bubbleNode in bubblesToPop)
+            foreach (Node node in nodesToUpdate)
             {
-                bubbleNode.Obstacle = ObstacleType.None;
-                bubbleNode.IsMatched = false;
+                // Eğer balonsa zarını patlat, booster ise zaten aşağıda ayarlandı
+                if (node.Obstacle == ObstacleType.Bubble) 
+                {
+                    node.Obstacle = ObstacleType.None;
+                }
+                node.IsMatched = false; // Ortak güvenlik sıfırlaması
             }
-            OnNodesUpdated?.Invoke(bubblesToPop);
+            OnNodesUpdated?.Invoke(nodesToUpdate);
         }
     }
 

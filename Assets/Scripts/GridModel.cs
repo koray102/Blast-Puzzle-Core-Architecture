@@ -68,13 +68,20 @@ public class GridModel
     {
         Node startNode = GetNode(startX, startY);
         
-        // Boş bir yere veya zaten eşleşmiş bir yere tıklandıysa iptal et ve FALSE döndür
-        if (startNode == null) return false; // Tahta dışı
+        // Boş bir yere veya tahta dışına tıklandıysa iptal et
+        if (startNode == null) return false; 
         
         // KURAL 1: Oyuncu bir Engele (Obstacle) doğrudan TIKLAYAMAZ!
         if (startNode.Obstacle != ObstacleType.None) return false; 
         
-        // KURAL 2: Tıklanan objenin bir rengi olmalı ve zaten patlatılmamış olmalı
+        // KURAL 2: Eğer tıklanan hücrede BOOSTER varsa, roket ateşlenir!
+        if (startNode.Booster != BoosterType.None)
+        {
+            ActivateBooster(startNode);
+            return true;
+        }
+
+        // KURAL 3: Tıklanan objenin bir rengi olmalı ve zaten patlatılmamış olmalı
         if (startNode.ColorBlock == BlockType.None || startNode.IsMatched) return false;
 
         BlockType targetType = startNode.ColorBlock;
@@ -103,10 +110,15 @@ public class GridModel
 
                 Node neighbor = GetNode(nx, ny);
 
+                // Komşu uygun renkte mi ve daha önce eklenmemiş mi?
                 if (neighbor != null && !neighbor.IsMatched && neighbor.ColorBlock == targetType)
                 {
-                    neighbor.IsMatched = true;
-                    nodesToCheck.Enqueue(neighbor);
+                    // DİKKAT: Engeller (Kutu/Balon) eşleşme döngüsüne (BFS) dahil edilmez
+                    if (neighbor.Obstacle == ObstacleType.None) 
+                    {
+                        neighbor.IsMatched = true;
+                        nodesToCheck.Enqueue(neighbor);
+                    }
                 }
             }
         }
@@ -114,9 +126,9 @@ public class GridModel
         // En az 2 blok yan yanaysa patlar
         if (matchedNodes.Count >= 2)
         {
-            // 1. ADIM: ETRAFINDAKİ ENGELLERİ (KUTU VE BALON) BUL
+            // ETRAFINDAKİ ENGELLERİ (KUTU VE BALON) BUL
             List<Node> affectedObstacles = new List<Node>();
-            List<Node> poppedBubbles = new List<Node>(); // Sadece zarı patlayanlar
+            List<Node> poppedBubbles = new List<Node>(); 
 
             foreach (Node matchedNode in matchedNodes)
             {
@@ -148,37 +160,14 @@ public class GridModel
                 }
             }
 
-            // Manager'lar okusun diye event'i fırlat
-            OnBlocksMatched?.Invoke(matchedNodes);
-
-            // 2. ADIM: VERİLERİ TEMİZLE
-            foreach (Node boxNode in affectedObstacles)
-            {
-                if (boxNode.Obstacle == ObstacleType.Box) boxNode.Obstacle = ObstacleType.None;
-            }
-
-            foreach (var node in matchedNodes)
-            {
-                node.ColorBlock = BlockType.None;
-                node.IsMatched = false; 
-            }
-
-            // 3. ADIM: BALONLARI PATLAT VE GÖRSELİ GÜNCELLE
-            if (poppedBubbles.Count > 0)
-            {
-                foreach (Node bubbleNode in poppedBubbles)
-                {
-                    bubbleNode.Obstacle = ObstacleType.None; // Balon gitti, içindeki renk kaldı!
-                }
-                
-                // View'a "Bu hücreleri silme, sadece dış görünüşlerini (rengini) güncelle" diyoruz
-                OnNodesUpdated?.Invoke(poppedBubbles); 
-            }
+            // ORTAK TEMİZLEYİCİYİ ÇAĞIR (Verileri silme, event fırlatma işlemleri burada yapılır)
+            ExecuteDestruction(matchedNodes, poppedBubbles);
 
             return true;
         }
         else
         {
+            // Eşleşme başarısız olduysa IsMatched durumlarını geri al
             foreach (var node in matchedNodes)
             {
                 node.IsMatched = false;
@@ -278,5 +267,106 @@ public class GridModel
         {
             OnNewBlocksSpawned?.Invoke(newNodes);
         }
+    }
+
+   
+    // Hem normal eşleşmelerin hem de roket/bomba patlamalarının ortak temizlik noktası
+    private void ExecuteDestruction(List<Node> nodesToDestroy, List<Node> bubblesToPop)
+    {
+        // 1. Manager'lar ve hedefler (Goals) okusun diye event fırlat
+        if (nodesToDestroy.Count > 0)
+        {
+            OnBlocksMatched?.Invoke(nodesToDestroy);
+        }
+
+        // 2. Yok olanların verilerini tamamen sil (Roketler, Kutular, Renkler)
+        foreach (Node node in nodesToDestroy)
+        {
+            node.ColorBlock = BlockType.None;
+            node.Booster = BoosterType.None; 
+            
+            if (node.Obstacle == ObstacleType.Box) 
+            {
+                node.Obstacle = ObstacleType.None;
+            }
+            node.IsMatched = false;
+        }
+
+        // 3. Balonları patlat ve görsel güncelleme event'ini fırlat
+        if (bubblesToPop.Count > 0)
+        {
+            foreach (Node bubbleNode in bubblesToPop)
+            {
+                bubbleNode.Obstacle = ObstacleType.None;
+                bubbleNode.IsMatched = false;
+            }
+            OnNodesUpdated?.Invoke(bubblesToPop);
+        }
+    }
+
+
+    private void ActivateBooster(Node startBooster)
+    {
+        List<Node> nodesToDestroy = new List<Node>();
+        List<Node> bubblesToPop = new List<Node>();
+        
+        // Zincirleme reaksiyonları yönetmek için kuyruk (Queue) kullanıyoruz
+        Queue<Node> boostersToTrigger = new Queue<Node>();
+
+        boostersToTrigger.Enqueue(startBooster);
+        startBooster.IsMatched = true;
+
+        while (boostersToTrigger.Count > 0)
+        {
+            Node currentBooster = boostersToTrigger.Dequeue();
+            
+            // Roketin kendisini de yok edilecekler listesine ekle
+            nodesToDestroy.Add(currentBooster);
+
+            // Hedef hattı belirle
+            List<Node> targetNodes = new List<Node>();
+
+            if (currentBooster.Booster == BoosterType.RocketHorizontal)
+            {
+                // Yatay eksendeki tüm hücreleri hedefe al
+                for (int x = 0; x < Width; x++) targetNodes.Add(GetNode(x, currentBooster.Y));
+            }
+            else if (currentBooster.Booster == BoosterType.RocketVertical)
+            {
+                // Dikey eksendeki tüm hücreleri hedefe al
+                for (int y = 0; y < Height; y++) targetNodes.Add(GetNode(currentBooster.X, y));
+            }
+
+            // Hedef hattındaki objeleri incele ve karar ver
+            foreach (Node target in targetNodes)
+            {
+                // Tahta dışıysa veya zaten bu reaksiyonda işleme alındıysa atla
+                if (target == null || target.IsMatched) continue;
+
+                // Boşlukları es geçmek performansı artırır
+                if (target.IsEmpty()) continue;
+
+                target.IsMatched = true;
+
+                if (target.Obstacle == ObstacleType.Bubble)
+                {
+                    // Balonsa sadece zarı patlatılır
+                    bubblesToPop.Add(target);
+                }
+                else if (target.Booster != BoosterType.None)
+                {
+                    // ZİNCİRLEME REAKSİYON: Roket başka bir roketi vurursa o da kuyruğa girip ateşlenir!
+                    boostersToTrigger.Enqueue(target);
+                }
+                else
+                {
+                    // Kutuysa veya renkli bloksa tamamen yok edilir
+                    nodesToDestroy.Add(target);
+                }
+            }
+        }
+
+        // Toplanan tüm hedefleri tek seferde temizle ve eventleri fırlat
+        ExecuteDestruction(nodesToDestroy, bubblesToPop);
     }
 }

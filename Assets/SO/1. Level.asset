@@ -17,11 +17,86 @@ MonoBehaviour:
   boardHeight: 5
   useManualSetup: 1
   startingBoard:
-  - columns: 0100000001000000020000000300000003000000
-  - columns: 0100000002000000020000000200000003000000
-  - columns: 0200000002000000020000000200000002000000
-  - columns: 0100000002000000020000000200000003000000
-  - columns: 0100000001000000020000000300000003000000
+  - columns:
+    - colorBlock: 3
+      obstacle: 0
+      booster: 0
+    - colorBlock: 2
+      obstacle: 0
+      booster: 0
+    - colorBlock: 2
+      obstacle: 0
+      booster: 0
+    - colorBlock: 2
+      obstacle: 0
+      booster: 0
+    - colorBlock: 3
+      obstacle: 0
+      booster: 0
+  - columns:
+    - colorBlock: 3
+      obstacle: 0
+      booster: 0
+    - colorBlock: 1
+      obstacle: 0
+      booster: 0
+    - colorBlock: 1
+      obstacle: 0
+      booster: 0
+    - colorBlock: 1
+      obstacle: 0
+      booster: 0
+    - colorBlock: 3
+      obstacle: 0
+      booster: 0
+  - columns:
+    - colorBlock: 1
+      obstacle: 0
+      booster: 0
+    - colorBlock: 1
+      obstacle: 0
+      booster: 0
+    - colorBlock: 0
+      obstacle: 0
+      booster: 2
+    - colorBlock: 1
+      obstacle: 0
+      booster: 0
+    - colorBlock: 2
+      obstacle: 0
+      booster: 0
+  - columns:
+    - colorBlock: 2
+      obstacle: 0
+      booster: 0
+    - colorBlock: 3
+      obstacle: 0
+      booster: 0
+    - colorBlock: 0
+      obstacle: 1
+      booster: 0
+    - colorBlock: 3
+      obstacle: 0
+      booster: 0
+    - colorBlock: 3
+      obstacle: 0
+      booster: 0
+  - columns:
+    - colorBlock: 2
+      obstacle: 0
+      booster: 0
+    - colorBlock: 1
+      obstacle: 0
+      booster: 0
+    - colorBlock: 3
+      obstacle: 0
+      booster: 0
+    - colorBlock: 2
+      obstacle: 2
+      booster: 0
+    - colorBlock: 2
+      obstacle: 0
+      booster: 0
   totalMoves: 10
   levelGoals:
   - rid: 4486749017961398335
@@ -33,4 +108,4 @@ MonoBehaviour:
       type: {class: TotalBlockGoal, ns: , asm: Assembly-CSharp}
       data:
         goalIcon: {fileID: 10901, guid: 0000000000000000f000000000000000, type: 0}
-        targetAmount: 10
+        targetAmount: 30

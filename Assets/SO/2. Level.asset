@@ -17,12 +17,102 @@ MonoBehaviour:
   boardHeight: 6
   useManualSetup: 1
   startingBoard:
-  - columns: 0000000000000000000000000000000000000000
-  - columns: 0000000000000000000000000000000000000000
-  - columns: 0000000000000000000000000000000000000000
-  - columns: 0000000001000000010000000100000000000000
-  - columns: 0000000000000000020000000200000000000000
-  - columns: 0000000000000000020000000000000000000000
+  - columns:
+    - colorBlock: 0
+      obstacle: 0
+      booster: 0
+    - colorBlock: 0
+      obstacle: 0
+      booster: 0
+    - colorBlock: 0
+      obstacle: 0
+      booster: 0
+    - colorBlock: 0
+      obstacle: 0
+      booster: 0
+    - colorBlock: 0
+      obstacle: 0
+      booster: 0
+  - columns:
+    - colorBlock: 0
+      obstacle: 0
+      booster: 0
+    - colorBlock: 0
+      obstacle: 0
+      booster: 0
+    - colorBlock: 0
+      obstacle: 0
+      booster: 0
+    - colorBlock: 0
+      obstacle: 0
+      booster: 0
+    - colorBlock: 0
+      obstacle: 0
+      booster: 0
+  - columns:
+    - colorBlock: 0
+      obstacle: 0
+      booster: 0
+    - colorBlock: 0
+      obstacle: 0
+      booster: 0
+    - colorBlock: 0
+      obstacle: 0
+      booster: 0
+    - colorBlock: 0
+      obstacle: 0
+      booster: 0
+    - colorBlock: 0
+      obstacle: 0
+      booster: 0
+  - columns:
+    - colorBlock: 0
+      obstacle: 0
+      booster: 0
+    - colorBlock: 0
+      obstacle: 0
+      booster: 0
+    - colorBlock: 0
+      obstacle: 0
+      booster: 0
+    - colorBlock: 0
+      obstacle: 0
+      booster: 0
+    - colorBlock: 0
+      obstacle: 0
+      booster: 0
+  - columns:
+    - colorBlock: 0
+      obstacle: 0
+      booster: 0
+    - colorBlock: 0
+      obstacle: 0
+      booster: 0
+    - colorBlock: 0
+      obstacle: 0
+      booster: 0
+    - colorBlock: 0
+      obstacle: 0
+      booster: 0
+    - colorBlock: 0
+      obstacle: 0
+      booster: 0
+  - columns:
+    - colorBlock: 0
+      obstacle: 0
+      booster: 0
+    - colorBlock: 0
+      obstacle: 0
+      booster: 0
+    - colorBlock: 0
+      obstacle: 0
+      booster: 0
+    - colorBlock: 0
+      obstacle: 0
+      booster: 0
+    - colorBlock: 0
+      obstacle: 0
+      booster: 0
   totalMoves: 0
   levelGoals: []
   availableColors: 010000000200000003000000

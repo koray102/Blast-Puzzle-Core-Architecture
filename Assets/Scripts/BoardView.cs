@@ -20,6 +20,7 @@ public class BoardView : MonoBehaviour
         model.OnBlocksMatched += HandleBlocksMatched;
         model.OnBlocksFell += HandleBlocksFell;
         model.OnNewBlocksSpawned += HandleNewBlocksSpawned;
+        model.OnNodesUpdated += HandleNodesUpdated;
 
         // 2. Tahtayı İlk Kez Diziyoruz
         for (int x = 0; x < model.Width; x++)
@@ -33,7 +34,7 @@ public class BoardView : MonoBehaviour
                     // Pozisyonu ortak metodumuzla hesaplıyoruz
                     Vector3 worldPosition = CalculateWorldPosition(x, y);
                     
-                    NodeView spawnedBlock = blockFactory.SpawnBlock(node.Type, worldPosition, x, y);
+                    NodeView spawnedBlock = blockFactory.SpawnBlock(node, worldPosition);
                     _viewGrid[x, y] = spawnedBlock;
                 }
             }
@@ -66,6 +67,7 @@ public class BoardView : MonoBehaviour
             BoardController.Instance.Model.OnBlocksMatched -= HandleBlocksMatched;
             BoardController.Instance.Model.OnBlocksFell -= HandleBlocksFell;
             BoardController.Instance.Model.OnNewBlocksSpawned -= HandleNewBlocksSpawned;
+            BoardController.Instance.Model.OnNodesUpdated -= HandleNodesUpdated;
         }
     }
 
@@ -122,19 +124,35 @@ public class BoardView : MonoBehaviour
 
     private void HandleNewBlocksSpawned(List<Node> newNodes)
     {
+        // Tahtanın yüksekliğini alıyoruz ki en tepe noktasını bulabilelim
+        int height = BoardController.Instance.Model.Height;
+
         foreach (var node in newNodes)
         {
             Vector3 targetPos = CalculateWorldPosition(node.X, node.Y);
             
-            // Ekranın üstünden, hizalı bir noktadan başlatıyoruz (+8 birim yukarıdan)
-            Vector3 spawnPos = targetPos + new Vector3(0, 8f, 0); 
+            // Yeni bloğun doğuş noktası: Aynı X hizasında, ama tahtanın 1-2 birim üstünde (Height + 1)
+            Vector3 spawnPos = CalculateWorldPosition(node.X, height + 1); 
 
             // Fabrikadan üret
-            NodeView newBlock = blockFactory.SpawnBlock(node.Type, spawnPos, node.X, node.Y);
+            NodeView newBlock = blockFactory.SpawnBlock(node, spawnPos);
             _viewGrid[node.X, node.Y] = newBlock;
 
-            // Düşme hareketini tetikle
+            // Yukarıdan asıl hedefine doğru düşme hareketini tetikle
             newBlock.MoveTo(targetPos);
+        }
+    }
+
+    private void HandleNodesUpdated(List<Node> updatedNodes)
+    {
+        foreach (Node node in updatedNodes)
+        {
+            NodeView viewToUpdate = _viewGrid[node.X, node.Y];
+            if (viewToUpdate != null)
+            {
+                // Fabrikadan bu hücrenin yeni haline göre rengini tazelemesini iste
+                blockFactory.UpdateBlockVisual(viewToUpdate, node);
+            }
         }
     }
 
@@ -146,6 +164,7 @@ public class BoardView : MonoBehaviour
             BoardController.Instance.Model.OnBlocksMatched -= HandleBlocksMatched;
             BoardController.Instance.Model.OnBlocksFell -= HandleBlocksFell;
             BoardController.Instance.Model.OnNewBlocksSpawned -= HandleNewBlocksSpawned;
+            BoardController.Instance.Model.OnNodesUpdated -= HandleNodesUpdated;
         }
     }
 }

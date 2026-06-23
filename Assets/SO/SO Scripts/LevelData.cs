@@ -5,10 +5,17 @@ using UnityEngine;
 
 
 [Serializable]
+public struct CellSetupData
+{
+    public BlockType colorBlock;
+    public ObstacleType obstacle;
+    public BoosterType booster;
+}
+[Serializable]
 public struct BoardRow
 {
-    // Bu satırdaki sütunlar (blok renkleri)
-    public BlockType[] columns; 
+    // Artık sadece renk değil, hücrenin tüm verisini tutuyoruz
+    public CellSetupData[] columns; 
 }
 
 [CreateAssetMenu(fileName = "New Level", menuName = "Level Data")]

@@ -11,9 +11,11 @@ public class GridModel
     public event Action<List<Node>> OnBlocksMatched;
     public event Action<List<BlockMoveData>> OnBlocksFell;
     public event Action<List<Node>> OnNewBlocksSpawned;
+    public event Action<List<Node>> OnNodesUpdated; // Sadece görseli yenilenecekler
 
 
-    public GridModel(int width, int height, BlockType[,] initialBoard = null)
+    // DEĞİŞİKLİK: Parametre artık CellSetupData[,] alıyor
+    public GridModel(int width, int height, CellSetupData[,] initialBoard = null)
     {
         Width = width;
         Height = height;
@@ -22,8 +24,7 @@ public class GridModel
         InitializeGrid(initialBoard);
     }
 
-
-    private void InitializeGrid(BlockType[,] initialBoard)
+    private void InitializeGrid(CellSetupData[,] initialBoard)
     {
         for (int x = 0; x < Width; x++)
         {
@@ -31,22 +32,23 @@ public class GridModel
             {
                 Node node = new Node(x, y);
 
-                // Eğer dışarıdan manuel bir dizilim verildiyse onu kullan
                 if (initialBoard != null)
                 {
-                    node.Type = initialBoard[x, y];
+                    // DİKKAT: Yeni katmanlı isimlendirmelere göre atama yapılıyor
+                    node.ColorBlock = initialBoard[x, y].colorBlock;
+                    node.Obstacle = initialBoard[x, y].obstacle;
+                    node.Booster = initialBoard[x, y].booster;
                 }
                 else
                 {
-                    // Verilmediyse tamamen rastgele üret
-                    node.Type = (BlockType)UnityEngine.Random.Range(1, 6);
+                    // Dışarıdan veri gelmediyse varsayılan olarak rastgele renk ata, engel/booster None kalır
+                    node.ColorBlock = (BlockType)UnityEngine.Random.Range(1, 6);
                 }
 
                 _grid[x, y] = node;
             }
         }
     }
-
 
     public Node GetNode(int x, int y)
     {
@@ -67,9 +69,15 @@ public class GridModel
         Node startNode = GetNode(startX, startY);
         
         // Boş bir yere veya zaten eşleşmiş bir yere tıklandıysa iptal et ve FALSE döndür
-        if (startNode == null || startNode.IsEmpty() || startNode.IsMatched) return false;
+        if (startNode == null) return false; // Tahta dışı
+        
+        // KURAL 1: Oyuncu bir Engele (Obstacle) doğrudan TIKLAYAMAZ!
+        if (startNode.Obstacle != ObstacleType.None) return false; 
+        
+        // KURAL 2: Tıklanan objenin bir rengi olmalı ve zaten patlatılmamış olmalı
+        if (startNode.ColorBlock == BlockType.None || startNode.IsMatched) return false;
 
-        BlockType targetType = startNode.Type;
+        BlockType targetType = startNode.ColorBlock;
         List<Node> matchedNodes = new List<Node>();
         Queue<Node> nodesToCheck = new Queue<Node>();
         
@@ -95,7 +103,7 @@ public class GridModel
 
                 Node neighbor = GetNode(nx, ny);
 
-                if (neighbor != null && !neighbor.IsMatched && neighbor.Type == targetType)
+                if (neighbor != null && !neighbor.IsMatched && neighbor.ColorBlock == targetType)
                 {
                     neighbor.IsMatched = true;
                     nodesToCheck.Enqueue(neighbor);
@@ -106,28 +114,75 @@ public class GridModel
         // En az 2 blok yan yanaysa patlar
         if (matchedNodes.Count >= 2)
         {
-            // VFX, SFX ve View için event fırlat
-            OnBlocksMatched?.Invoke(matchedNodes);
+            // 1. ADIM: ETRAFINDAKİ ENGELLERİ (KUTU VE BALON) BUL
+            List<Node> affectedObstacles = new List<Node>();
+            List<Node> poppedBubbles = new List<Node>(); // Sadece zarı patlayanlar
 
-            // Modelden blokları temizle
-            foreach (var node in matchedNodes)
+            foreach (Node matchedNode in matchedNodes)
             {
-                node.Type = BlockType.None;
-                node.IsMatched = false; // Sonraki turlar için reset
+                for (int i = 0; i < 4; i++)
+                {
+                    int nx = matchedNode.X + dx[i];
+                    int ny = matchedNode.Y + dy[i];
+                    Node neighbor = GetNode(nx, ny);
+
+                    if (neighbor != null && neighbor.Obstacle != ObstacleType.None && !affectedObstacles.Contains(neighbor))
+                    {
+                        affectedObstacles.Add(neighbor);
+                    }
+                }
             }
 
-            // Eşleşme BAŞARILI, Controller'a TRUE döndür
+            // Engelleri tiplerine göre ayır
+            foreach (Node obstacleNode in affectedObstacles)
+            {
+                if (obstacleNode.Obstacle == ObstacleType.Box)
+                {
+                    // Kutu tamamen yok olur, silinmesi için ana listeye ekle
+                    if (!matchedNodes.Contains(obstacleNode)) matchedNodes.Add(obstacleNode);
+                }
+                else if (obstacleNode.Obstacle == ObstacleType.Bubble)
+                {
+                    // Balon sadece zarını kaybeder, bloğa dokunulmaz
+                    poppedBubbles.Add(obstacleNode);
+                }
+            }
+
+            // Manager'lar okusun diye event'i fırlat
+            OnBlocksMatched?.Invoke(matchedNodes);
+
+            // 2. ADIM: VERİLERİ TEMİZLE
+            foreach (Node boxNode in affectedObstacles)
+            {
+                if (boxNode.Obstacle == ObstacleType.Box) boxNode.Obstacle = ObstacleType.None;
+            }
+
+            foreach (var node in matchedNodes)
+            {
+                node.ColorBlock = BlockType.None;
+                node.IsMatched = false; 
+            }
+
+            // 3. ADIM: BALONLARI PATLAT VE GÖRSELİ GÜNCELLE
+            if (poppedBubbles.Count > 0)
+            {
+                foreach (Node bubbleNode in poppedBubbles)
+                {
+                    bubbleNode.Obstacle = ObstacleType.None; // Balon gitti, içindeki renk kaldı!
+                }
+                
+                // View'a "Bu hücreleri silme, sadece dış görünüşlerini (rengini) güncelle" diyoruz
+                OnNodesUpdated?.Invoke(poppedBubbles); 
+            }
+
             return true;
         }
         else
         {
-            // Patlama olmadıysa eşleşme durumlarını sıfırla
             foreach (var node in matchedNodes)
             {
                 node.IsMatched = false;
             }
-
-            // Eşleşme BAŞARISIZ, Controller'a FALSE döndür
             return false;
         }
     }
@@ -138,33 +193,52 @@ public class GridModel
     {
         List<BlockMoveData> moveMoves = new List<BlockMoveData>();
 
-        // Sütun sütun tarıyoruz (Soldan sağa)
         for (int x = 0; x < Width; x++)
         {
-            // Aşağıdan yukarıya doğru boşluk arıyoruz (y=0 en alt satır kabul ediyoruz)
-            int emptyY = 0; 
+            // O sütundaki en alt boşluğu takip edeceğiz.
+            int emptyY = -1; 
 
+            // İşlemi AŞAĞIDAN YUKARIYA doğru yapıyoruz ki blokları en dibe çekebilelim
             for (int y = 0; y < Height; y++)
             {
                 Node currentNode = GetNode(x, y);
 
-                if (!currentNode.IsEmpty())
+                if (currentNode.Obstacle == ObstacleType.Box)
                 {
-                    // Eğer blok boşluktan daha yukarıdaysa, onu aşağı (emptyY'ye) çek
-                    if (y > emptyY)
+                    // KURAL 1: Kutuya çarptık! Kutu yolu tıkar. 
+                    // Bu noktadan sonra üstten gelen hiçbir blok kutunun altına DÜŞEMEZ.
+                    emptyY = -1; 
+                }
+                else if (currentNode.CanBlockFallInto())
+                {
+                    // Eğer henüz boş bir yer işaretlemediysek, burası yeni dip noktamızdır
+                    if (emptyY == -1) emptyY = y;
+                }
+                else 
+                {
+                    // Hücrede hareket edebilir bir şey var (Renk, Booster veya BALONLU Blok)
+                    if (emptyY != -1)
                     {
                         Node targetNode = GetNode(x, emptyY);
-                        targetNode.Type = currentNode.Type; // Rengi aşağıya kopyala
-                        currentNode.Type = BlockType.None;  // Eski yeri boşalt
+                        
+                        targetNode.ColorBlock = currentNode.ColorBlock;
+                        targetNode.Booster = currentNode.Booster;
+                        
+                        // YENİ EKLENEN KISIM: Eğer blokta balon varsa o da beraber düşer
+                        targetNode.Obstacle = currentNode.Obstacle; 
+                        
+                        currentNode.ColorBlock = BlockType.None;
+                        currentNode.Booster = BoosterType.None;
+                        currentNode.Obstacle = ObstacleType.None;
 
                         moveMoves.Add(new BlockMoveData(x, y, x, emptyY));
+                        
+                        emptyY++;
                     }
-                    emptyY++; // Bir sonraki olası boşluk bir üst satır
                 }
             }
         }
 
-        // Eğer hareket eden blok varsa View'a haber ver
         if (moveMoves.Count > 0)
         {
             OnBlocksFell?.Invoke(moveMoves);
@@ -179,20 +253,27 @@ public class GridModel
 
         for (int x = 0; x < Width; x++)
         {
-            for (int y = 0; y < Height; y++)
+            // Yukarıdan aşağı doğru (gökyüzünden yere) tarama yapıyoruz
+            for (int y = Height - 1; y >= 0; y--)
             {
                 Node node = GetNode(x, y);
-                if (node.IsEmpty())
+
+                if (node.Obstacle == ObstacleType.Box)
                 {
-                    // Yeni rastgele renk ata
+                    // Kutuya denk geldik! Kutu yolu tıkadığı için altındaki boşluklara yağmur yağamaz.
+                    // Döngüyü kırıp diğer sütuna geçiyoruz.
+                    break; 
+                }
+                
+                if (node.CanBlockFallInto())
+                {
                     BlockType randomType = (BlockType)UnityEngine.Random.Range(1, 6);
-                    node.Type = randomType;
+                    node.ColorBlock = randomType;
                     newNodes.Add(node);
                 }
             }
         }
 
-        // Yeni bloklar oluştuysa View'a haber ver
         if (newNodes.Count > 0)
         {
             OnNewBlocksSpawned?.Invoke(newNodes);

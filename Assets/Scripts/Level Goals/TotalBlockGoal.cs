@@ -6,10 +6,10 @@ public class TotalBlockGoal : LevelGoal
     public int targetAmount;
     private int _currentAmount = 0;
 
-    public override void UpdateGoal(BlockType poppedBlockType)
+    public override void UpdateGoal(Node node)
     {
-        // Renge bakmadan her patlayan blokta sayacı artır
-        if (poppedBlockType != BlockType.None)
+        // DİKKAT: Herhangi bir renkli blok patladıysa say
+        if (node.ColorBlock != BlockType.None)
         {
             _currentAmount++;
             OnGoalUpdated?.Invoke();

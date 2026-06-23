@@ -61,8 +61,7 @@ public class LevelManager : MonoBehaviour
         {
             foreach (var goal in currentLevelData.levelGoals)
             {
-                //Debug.Log($"update goal: {node.Type}");
-                goal.UpdateGoal(node.Type);
+                goal.UpdateGoal(node);
             }
         }
 

@@ -4,23 +4,41 @@ public class BlockFactory : MonoBehaviour
 {
     [SerializeField] private ObjectPool _pool;
     
-    // Modelden gelen BlockType'ı alıp ekranda fiziksel bir küp oluşturur
-    public NodeView SpawnBlock(BlockType type, Vector3 position, int x, int y)
+    // DEĞİŞİKLİK: Artık saf enum değil, tüm katmanları okuyabilmek için Node alıyor
+    public NodeView SpawnBlock(Node node, Vector3 position)
     {
-        // 1. Havuzdan bir küp çek
-        NodeView node = _pool.GetNode();
+        NodeView nodeView = _pool.GetNode();
+        nodeView.transform.position = position;
         
-        // 2. Pozisyonunu ayarla
-        node.transform.position = position;
+        // Hücrenin durumuna göre rengi belirle
+        Color blockColor = GetColorForNode(node);
+        nodeView.Init(blockColor, node.X, node.Y);
         
-        // 3. Enum'a göre rengini bul ve initialize et
-        Color blockColor = GetColorForType(type);
-        node.Init(blockColor, x, y);
-        
-        return node;
+        return nodeView;
     }
 
-    // Enum değerlerini Unity Color değerlerine eşlediğimiz yer
+    private Color GetColorForNode(Node node)
+    {
+        // ÖNCELİK SIRALAMASI: Hücrede önce ne görünmeli?
+        
+        // 1. Eğer hücrede sabit bir Kutu (Box) varsa kahverengi yap
+        if (node.Obstacle == ObstacleType.Box)
+        {
+            return new Color(0.45f, 0.25f, 0.1f); // Ahşap/Kutu rengi
+        }
+
+        if (node.Obstacle == ObstacleType.Bubble) return new Color(0.7f, 0.9f, 1f);
+
+        // 2. Eğer hücrede bir Booster varsa (Örn: Roket) camgöbeği yap
+        if (node.Booster != BoosterType.None)
+        {
+            return Color.cyan; 
+        }
+
+        // 3. Hiçbiri yoksa normal renkli bloğu bas
+        return GetColorForType(node.ColorBlock);
+    }
+
     private Color GetColorForType(BlockType type)
     {
         switch (type)
@@ -29,8 +47,15 @@ public class BlockFactory : MonoBehaviour
             case BlockType.Blue: return Color.blue;
             case BlockType.Green: return Color.green;
             case BlockType.Yellow: return Color.yellow;
-            case BlockType.Purple: return new Color(0.5f, 0f, 0.5f); // Mor
+            case BlockType.Purple: return new Color(0.5f, 0f, 0.5f);
             default: return Color.white;
         }
+    }
+
+    // BlockFactory.cs içine eklenecek
+    public void UpdateBlockVisual(NodeView nodeView, Node node)
+    {
+        Color blockColor = GetColorForNode(node);
+        nodeView.UpdateColor(blockColor);
     }
 }

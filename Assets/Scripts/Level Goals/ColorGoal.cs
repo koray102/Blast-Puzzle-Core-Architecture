@@ -7,10 +7,10 @@ public class ColorGoal : LevelGoal
     public int targetAmount;
     private int _currentAmount = 0;
 
-    public override void UpdateGoal(BlockType poppedBlockType)
+    public override void UpdateGoal(Node node)
     {
-        // Sadece kendi rengiyse sayacı artır
-        if (poppedBlockType == targetColor)
+        // DİKKAT: Type yerine ColorBlock kontrol ediliyor
+        if (node.ColorBlock == targetColor)
         {
             _currentAmount++;
             OnGoalUpdated?.Invoke();

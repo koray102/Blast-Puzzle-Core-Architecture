@@ -4,7 +4,7 @@ using UnityEngine;
 public class NodeView : MonoBehaviour
 {
     [Header("Movement Settings")]
-    [SerializeField] private float fallSpeed = 15f; // Sabit düşme hızı
+    [SerializeField] private float fallSpeed = 10f; // Sabit düşme hızı
     
 
     [Header("Reference Settings")]
@@ -45,6 +45,14 @@ public class NodeView : MonoBehaviour
     {
         X = newX;
         Y = newY;
+    }
+
+
+    public void UpdateColor(Color newColor)
+    {
+        CurrentColor = newColor;
+        _propBlock.SetColor(ColorProperty, newColor);
+        _renderer.SetPropertyBlock(_propBlock);
     }
 
 

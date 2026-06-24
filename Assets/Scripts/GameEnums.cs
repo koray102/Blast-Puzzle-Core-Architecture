@@ -35,6 +35,7 @@ public enum GameState
 public enum VFXType
 {
     BlockDestroy,
+    BlockDestroyV2,
     RocketExplosion,
     BombExplosion,
     DiscoBallExplosion

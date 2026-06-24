@@ -20,16 +20,16 @@ MonoBehaviour:
   - columns:
     - colorBlock: 0
       obstacle: 0
-      booster: 4
-    - colorBlock: 0
+      booster: 2
+    - colorBlock: 1
       obstacle: 0
-      booster: 4
-    - colorBlock: 0
+      booster: 0
+    - colorBlock: 1
       obstacle: 0
-      booster: 4
-    - colorBlock: 0
+      booster: 0
+    - colorBlock: 1
       obstacle: 0
-      booster: 4
+      booster: 0
     - colorBlock: 0
       obstacle: 0
       booster: 4
@@ -72,22 +72,22 @@ MonoBehaviour:
     - colorBlock: 2
       obstacle: 0
       booster: 0
-    - colorBlock: 2
+    - colorBlock: 0
       obstacle: 0
-      booster: 0
-    - colorBlock: 3
+      booster: 2
+    - colorBlock: 0
       obstacle: 0
-      booster: 0
+      booster: 3
     - colorBlock: 3
       obstacle: 0
       booster: 0
   - columns:
-    - colorBlock: 1
+    - colorBlock: 0
       obstacle: 0
-      booster: 0
-    - colorBlock: 2
+      booster: 1
+    - colorBlock: 0
       obstacle: 0
-      booster: 0
+      booster: 1
     - colorBlock: 2
       obstacle: 0
       booster: 0

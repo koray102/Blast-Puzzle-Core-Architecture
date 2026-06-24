@@ -71,6 +71,7 @@ public class DiscoBallAnimator : BoosterAnimatorBase
         // 3. AŞAMA: ANA PATLAMA (Disko Topunun Kendisi)
         VFXManager.Instance.PlayVFX(discoVFXType, centerPos);
         sourceNode.gameObject.SetActive(false);
+        BoardView.Instance.ApplyKnockback(affectedNodes);
 
         // 4. AŞAMA: HEDEFLERİN PATLAMASI (Bağlanan tüm bloklar AYNI ANDA havaya uçsun)
         foreach (var node in affectedNodes)

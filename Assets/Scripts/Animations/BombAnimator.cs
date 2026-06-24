@@ -44,6 +44,7 @@ public class BombAnimator : BoosterAnimatorBase
         
         // Bombayı sahnede anında gizle
         sourceNode.gameObject.SetActive(false);
+        BoardView.Instance.ApplyKnockback(affectedNodes);
 
         // 3. TOPLU YIKIM: Etkilenen tüm blokları AYNI ANDA, bekleme (delay) olmadan patlat
         foreach (var node in affectedNodes)

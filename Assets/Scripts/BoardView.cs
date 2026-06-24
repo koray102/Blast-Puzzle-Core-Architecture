@@ -164,44 +164,10 @@ public class BoardView : MonoBehaviour
 
     private void HandleBlocksMatched(List<Node> matchedNodes)
     {
-        // Hangi bloğun, hangi yöne itileceğini tutacağımız liste
-        Dictionary<NodeView, Vector3> knockbackVectors = new Dictionary<NodeView, Vector3>();
+        // 1. ADIM: GERİ TEPMELERİ UYGULA (YENİ ORTAK METOT)
+        ApplyKnockback(matchedNodes);
 
-        // 1. ADIM: İTİLME YÖNLERİNİ HESAPLA
-        foreach (Node node in matchedNodes)
-        {
-            int[] dx = { 0, 0, 1, -1 };
-            int[] dy = { 1, -1, 0, 0 };
-
-            for (int i = 0; i < 4; i++)
-            {
-                int nx = node.X + dx[i];
-                int ny = node.Y + dy[i];
-
-                if (BoardController.Instance.Model.IsValidPosition(nx, ny))
-                {
-                    // Eğer komşu hücre patlamıyorsa itilmelidir
-                    bool isNeighborExploding = matchedNodes.Exists(n => n.X == nx && n.Y == ny);
-                    if (!isNeighborExploding)
-                    {
-                        NodeView neighborView = _viewGrid[nx, ny];
-                        if (neighborView != null)
-                        {
-                            // Yön hesabı: Komşunun Konumu (nx) - Patlayan Konumu (node.X)
-                            Vector3 pushDir = new Vector3(dx[i], dy[i], 0);
-
-                            if (!knockbackVectors.ContainsKey(neighborView))
-                                knockbackVectors[neighborView] = Vector3.zero;
-
-                            // Eğer blok 2 ayrı patlamanın ortasındaysa vektörler toplanıp ÇAPRAZ tepme oluşturur!
-                            knockbackVectors[neighborView] += pushDir; 
-                        }
-                    }
-                }
-            }
-        }
-
-        // 2. ADIM: PATLAYANLARI GİZLE (Eski kodun aynısı)
+        // 2. ADIM: PATLAYANLARI GİZLE 
         foreach (Node node in matchedNodes)
         {
             NodeView viewToHide = _viewGrid[node.X, node.Y];
@@ -210,20 +176,6 @@ public class BoardView : MonoBehaviour
                 _pool.ReturnNode(viewToHide); 
                 _viewGrid[node.X, node.Y] = null; 
             }
-        }
-
-        // 3. ADIM: GERİ TEPMELERİ UYGULA
-        foreach (var kvp in knockbackVectors)
-        {
-            NodeView view = kvp.Key;
-            Vector3 pushDirection = kvp.Value.normalized;
-
-            LockNode(view); // Node'u kilit listesine al
-
-            view.PlayKnockback(pushDirection, () => 
-            {
-                UnlockNode(view); // Node işini bitirince listeden çıkar
-            });
         }
     }
 
@@ -410,6 +362,113 @@ public class BoardView : MonoBehaviour
             ActiveBoosterSources.Remove(sourceView);
             foreach (var view in affectedViews) { _pool.ReturnNode(view); }
             if (sourceView != null) _pool.ReturnNode(sourceView);
+        }
+    }
+
+
+    private void ApplyKnockback(List<Node> explodingNodes)
+    {
+        Dictionary<NodeView, Vector3> knockbackVectors = new Dictionary<NodeView, Vector3>();
+
+        foreach (Node node in explodingNodes)
+        {
+            int[] dx = { 0, 0, 1, -1 };
+            int[] dy = { 1, -1, 0, 0 };
+
+            for (int i = 0; i < 4; i++)
+            {
+                int nx = node.X + dx[i];
+                int ny = node.Y + dy[i];
+
+                if (BoardController.Instance.Model.IsValidPosition(nx, ny))
+                {
+                    // Eğer komşu hücre de patlayanların içinde DEĞİLSE itilecek
+                    bool isNeighborExploding = explodingNodes.Exists(n => n.X == nx && n.Y == ny);
+                    if (!isNeighborExploding)
+                    {
+                        NodeView neighborView = _viewGrid[nx, ny];
+                        
+                        // Eğer hücre boş değilse ve fırıldak gibi dönen başka bir booster değilse
+                        if (neighborView != null && !ActiveBoosterSources.Contains(neighborView))
+                        {
+                            Vector3 pushDir = new Vector3(dx[i], dy[i], 0);
+
+                            if (!knockbackVectors.ContainsKey(neighborView))
+                                knockbackVectors[neighborView] = Vector3.zero;
+
+                            knockbackVectors[neighborView] += pushDir; 
+                        }
+                    }
+                }
+            }
+        }
+
+        // Hesaplanan itme vektörlerini GÜNCEL KİLİT MİMARİSİ ile uygula
+        foreach (var kvp in knockbackVectors)
+        {
+            NodeView view = kvp.Key;
+            Vector3 pushDirection = kvp.Value.normalized; // Çapraz tepmeler için normalize et
+
+            // DİKKAT: Eski kör sayaç yerine, bloğun kendisini kilit listesine alıyoruz!
+            LockNode(view); 
+
+            view.PlayKnockback(pushDirection, () => 
+            {
+                // İşlem bitince bloğu kilit listesinden çıkarıyoruz
+                UnlockNode(view); 
+            });
+        }
+    }
+
+    // --- YENİ: Animatörlerin kendi zamanlamasıyla çağıracağı Overload ---
+    public void ApplyKnockback(List<NodeView> explodingViews)
+    {
+        Dictionary<NodeView, Vector3> knockbackVectors = new Dictionary<NodeView, Vector3>();
+
+        foreach (NodeView view in explodingViews)
+        {
+            if (view == null) continue;
+
+            int[] dx = { 0, 0, 1, -1 };
+            int[] dy = { 1, -1, 0, 0 };
+
+            for (int i = 0; i < 4; i++)
+            {
+                int nx = view.X + dx[i];
+                int ny = view.Y + dy[i];
+
+                if (BoardController.Instance.Model.IsValidPosition(nx, ny))
+                {
+                    bool isNeighborExploding = explodingViews.Exists(v => v != null && v.X == nx && v.Y == ny);
+                    if (!isNeighborExploding)
+                    {
+                        NodeView neighborView = _viewGrid[nx, ny];
+                        
+                        // Sadece aktif olanlara ve koruma kalkanında olmayanlara şok dalgası vur
+                        if (neighborView != null && neighborView.gameObject.activeInHierarchy && !ActiveBoosterSources.Contains(neighborView))
+                        {
+                            Vector3 pushDir = new Vector3(dx[i], dy[i], 0);
+
+                            if (!knockbackVectors.ContainsKey(neighborView))
+                                knockbackVectors[neighborView] = Vector3.zero;
+
+                            knockbackVectors[neighborView] += pushDir; 
+                        }
+                    }
+                }
+            }
+        }
+
+        foreach (var kvp in knockbackVectors)
+        {
+            NodeView view = kvp.Key;
+            Vector3 pushDirection = kvp.Value.normalized;
+
+            LockNode(view); 
+            view.PlayKnockback(pushDirection, () => 
+            {
+                UnlockNode(view); 
+            });
         }
     }
 

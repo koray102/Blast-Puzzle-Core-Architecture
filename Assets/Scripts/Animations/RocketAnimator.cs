@@ -44,6 +44,8 @@ public class RocketAnimator : BoosterAnimatorBase
             // 2. Bu blok roketin çaprazından veya başka bir patlamadan dolayı zaten patladıysa, tekrar VFX oynatıp çorba yapma.
             if (!node.gameObject.activeInHierarchy) continue;
 
+            BoardView.Instance.ApplyKnockback(new List<NodeView> { node });
+
             VFXManager.Instance.PlayVFX(blockDestroyVFXType, node.transform.position);
             node.gameObject.SetActive(false);
 

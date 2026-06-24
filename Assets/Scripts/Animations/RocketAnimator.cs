@@ -38,6 +38,12 @@ public class RocketAnimator : BoosterAnimatorBase
         {
             if (node == sourceNode) continue;
 
+            // 1. Bu blok başka bir animatörün (örneğin tetiklenen bir bombanın) ana objesiyse, ona DOKUNMA! O kendi animatörüyle patlayacak.
+            if (BoardView.Instance.ActiveBoosterSources.Contains(node)) continue;
+
+            // 2. Bu blok roketin çaprazından veya başka bir patlamadan dolayı zaten patladıysa, tekrar VFX oynatıp çorba yapma.
+            if (!node.gameObject.activeInHierarchy) continue;
+
             VFXManager.Instance.PlayVFX(blockDestroyVFXType, node.transform.position);
             node.gameObject.SetActive(false);
 
@@ -47,6 +53,6 @@ public class RocketAnimator : BoosterAnimatorBase
         yield return new WaitForSeconds(delayAfterComplete);
 
         // Atasından gelen ortak bitiriş metodunu çağır
-        FinishAnimation(affectedNodes, onComplete);
+        FinishAnimation(sourceNode, affectedNodes, onComplete);
     }
 }

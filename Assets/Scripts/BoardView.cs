@@ -3,6 +3,8 @@ using UnityEngine;
 
 public class BoardView : MonoBehaviour
 {
+    public static BoardView Instance { get; private set; }
+
     [Header("References")]
     [SerializeField] private BlockFactory blockFactory;
     [SerializeField] private ObjectPool _pool; // Patlatma sonrası havuza göndermek için
@@ -23,10 +25,13 @@ public class BoardView : MonoBehaviour
     private HashSet<NodeView> _animatingNodes = new HashSet<NodeView>();
     private int _systemLocks = 0; // Sadece Controller'ın kullandığı genel gecikmeler için
     private Dictionary<BoosterType, BoosterAnimatorBase> _animatorDict;
+    internal HashSet<NodeView> ActiveBoosterSources { get; private set; } = new HashSet<NodeView>(); // Şu anda kendi animasyonunu oynatan (şişen, dönen) booster'ların listesi (KORUMA KALKANI)
 
 
     private void Awake()
     {
+        Instance = this;
+
         // 1. Sözlüğü başlat
         _animatorDict = new Dictionary<BoosterType, BoosterAnimatorBase>();
 
@@ -78,6 +83,7 @@ public class BoardView : MonoBehaviour
                     Vector3 worldPosition = CalculateWorldPosition(x, y);
                     
                     NodeView spawnedBlock = blockFactory.SpawnBlock(node, worldPosition);
+
                     _viewGrid[x, y] = spawnedBlock;
                 }
             }
@@ -309,6 +315,7 @@ public class BoardView : MonoBehaviour
             Vector3 spawnPos = CalculateWorldPosition(node.X, height + spawnYOffset); 
 
             NodeView newBlock = blockFactory.SpawnBlock(node, spawnPos);
+
             _viewGrid[node.X, node.Y] = newBlock;
 
             // ÇOK KRİTİK: Kilidi anında atıyoruz ki bekleme süresince orkestra yanlışlıkla kilidi açmasın
@@ -362,42 +369,49 @@ public class BoardView : MonoBehaviour
     private void HandleBoosterDetonated(Node sourceBooster, List<Node> affectedNodes)
     {
         NodeView sourceView = _viewGrid[sourceBooster.X, sourceBooster.Y];
+        if (sourceView == null) return;
+        
+        // Bu kaynağı koruma altına al (Başka bir patlama bunu yanlışlıkla yok etmesin)
+        ActiveBoosterSources.Add(sourceView);
+
         List<NodeView> affectedViews = new List<NodeView>();
         
         foreach (Node node in affectedNodes)
         {
+            // Eğer objeyi başka bir patlama zaten sildiyse (null ise) pas geç
+            if (_viewGrid[node.X, node.Y] == null) continue;
+
             NodeView view = _viewGrid[node.X, node.Y];
-            if (view != null)
+            affectedViews.Add(view);
+
+            // --- İŞTE O SİHİRLİ KONTROL (RACE CONDITION ÖNLEYİCİ) ---
+            // Eğer patlatacağımız bu blok DİĞER BİR BOOSTER ise, onu grid'den ŞİMDİ SİLME!
+            // Bırakalım GridModel'den onun kendi patlama event'i geldiğinde kendini silsin.
+            // Sadece normal blokları, kutuları ve ana kaynağın kendisini sil.
+            if (node.Booster == BoosterType.None || node == sourceBooster)
             {
-                affectedViews.Add(view);
-                _viewGrid[node.X, node.Y] = null; // Yerçekimi için boşluk aç
+                _viewGrid[node.X, node.Y] = null; 
             }
         }
 
-        // Sözlükten bak. Bu Booster tipi için bir animatör ayarlanmış mı?
+        // Animasyonu Oynat (Sen o önceki Invoke'u yukarı aldığın için node.Booster hala dolu geliyor!)
         if (_animatorDict.TryGetValue(sourceBooster.Booster, out BoosterAnimatorBase activeAnimator))
         {
-            Debug.Log("Animation played");
-            LockState(); // Orkestrayı kitle
-            
-            // Seçilen animatöre işi devret
+            LockState(); 
             activeAnimator.PlayAnimation(sourceView, affectedViews, () => 
             {
-                UnlockState(); // Animasyon bitince orkestranın kilidini aç
+                // Animasyon bitti, kalkanı indir
+                ActiveBoosterSources.Remove(sourceView);
+                UnlockState(); 
             });
         }
         else
         {
-            Debug.Log("Animation can not be played");
-            // Animatör atanmamışsa (unutulmuşsa) güvenli bir şekilde objeleri sil
-            foreach (var view in affectedViews)
-            {
-                _pool.ReturnNode(view);
-            }
+            ActiveBoosterSources.Remove(sourceView);
+            foreach (var view in affectedViews) { _pool.ReturnNode(view); }
             if (sourceView != null) _pool.ReturnNode(sourceView);
         }
     }
-
 
     // Memory Leak (Bellek sızıntısı) olmaması için oyun bitince abonelikleri siliyoruz
     private void OnDestroy()

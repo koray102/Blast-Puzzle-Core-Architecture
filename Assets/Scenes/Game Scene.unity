@@ -256,6 +256,62 @@ CanvasRenderer:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 5598245}
   m_CullTransparentMesh: 1
+--- !u!1 &24213120
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 24213121}
+  - component: {fileID: 24213122}
+  m_Layer: 0
+  m_Name: Disco Ball Animator
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &24213121
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 24213120}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 419838045}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &24213122
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 24213120}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 355693e67f3500942a437d7493dc4c58, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  _pool: {fileID: 1563546525}
+  handledTypes: 04000000
+  delayBetweenLines: 0.1
+  preExplosionDelay: 0.4
+  delayAfterComplete: 0.25
+  lineMaterial: {fileID: 2100000, guid: c89a5a5ad8e57cb4ba5e8a1690a42608, type: 2}
+  lineWidth: 0.15
+  lineColor: {r: 0, g: 1, b: 1, a: 1}
+  lineZOffset: -1
+  lineSortingOrder: 10
+  discoVFXType: 3
+  blockDestroyVFXType: 0
 --- !u!1 &177459246
 GameObject:
   m_ObjectHideFlags: 0
@@ -889,6 +945,7 @@ Transform:
   m_Children:
   - {fileID: 1455183381}
   - {fileID: 347121805}
+  - {fileID: 24213121}
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &454792750
@@ -1813,6 +1870,10 @@ MonoBehaviour:
   - type: 2
     prefab: {fileID: 5339739117810204696, guid: 26e1cb216e3635e4a820f58a1118d6b9, type: 3}
     initialSize: 5
+  - type: 3
+    prefab: {fileID: 9025660922098761659, guid: 019faff12646bd8438ea56e8e7861fd8, type: 3}
+    initialSize: 5
+  globalZOffset: -1.5
 --- !u!4 &1601792076
 Transform:
   m_ObjectHideFlags: 0

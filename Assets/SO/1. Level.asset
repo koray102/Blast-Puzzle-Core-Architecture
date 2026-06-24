@@ -20,83 +20,83 @@ MonoBehaviour:
   - columns:
     - colorBlock: 0
       obstacle: 0
-      booster: 3
-    - colorBlock: 0
-      obstacle: 1
-      booster: 0
+      booster: 4
     - colorBlock: 0
       obstacle: 0
-      booster: 3
-    - colorBlock: 0
-      obstacle: 1
-      booster: 0
+      booster: 4
     - colorBlock: 0
       obstacle: 0
-      booster: 3
+      booster: 4
+    - colorBlock: 0
+      obstacle: 0
+      booster: 4
+    - colorBlock: 0
+      obstacle: 0
+      booster: 4
   - columns:
-    - colorBlock: 0
-      obstacle: 1
-      booster: 0
-    - colorBlock: 0
-      obstacle: 1
-      booster: 0
-    - colorBlock: 0
-      obstacle: 1
-      booster: 0
-    - colorBlock: 0
-      obstacle: 1
-      booster: 0
-    - colorBlock: 0
-      obstacle: 1
-      booster: 0
-  - columns:
-    - colorBlock: 0
+    - colorBlock: 1
       obstacle: 0
-      booster: 3
-    - colorBlock: 0
-      obstacle: 1
       booster: 0
-    - colorBlock: 0
+    - colorBlock: 1
       obstacle: 0
-      booster: 3
-    - colorBlock: 0
-      obstacle: 1
       booster: 0
-    - colorBlock: 0
+    - colorBlock: 3
       obstacle: 0
-      booster: 3
-  - columns:
-    - colorBlock: 0
-      obstacle: 1
       booster: 0
-    - colorBlock: 0
-      obstacle: 1
+    - colorBlock: 3
+      obstacle: 0
       booster: 0
-    - colorBlock: 0
-      obstacle: 1
-      booster: 0
-    - colorBlock: 0
-      obstacle: 1
-      booster: 0
-    - colorBlock: 0
-      obstacle: 1
+    - colorBlock: 1
+      obstacle: 0
       booster: 0
   - columns:
-    - colorBlock: 0
+    - colorBlock: 1
       obstacle: 0
-      booster: 3
-    - colorBlock: 0
-      obstacle: 1
       booster: 0
-    - colorBlock: 0
+    - colorBlock: 2
       obstacle: 0
-      booster: 3
-    - colorBlock: 0
-      obstacle: 1
       booster: 0
-    - colorBlock: 0
+    - colorBlock: 3
       obstacle: 0
-      booster: 3
+      booster: 0
+    - colorBlock: 3
+      obstacle: 0
+      booster: 0
+    - colorBlock: 1
+      obstacle: 0
+      booster: 0
+  - columns:
+    - colorBlock: 1
+      obstacle: 0
+      booster: 0
+    - colorBlock: 2
+      obstacle: 0
+      booster: 0
+    - colorBlock: 2
+      obstacle: 0
+      booster: 0
+    - colorBlock: 3
+      obstacle: 0
+      booster: 0
+    - colorBlock: 3
+      obstacle: 0
+      booster: 0
+  - columns:
+    - colorBlock: 1
+      obstacle: 0
+      booster: 0
+    - colorBlock: 2
+      obstacle: 0
+      booster: 0
+    - colorBlock: 2
+      obstacle: 0
+      booster: 0
+    - colorBlock: 1
+      obstacle: 0
+      booster: 0
+    - colorBlock: 2
+      obstacle: 0
+      booster: 0
   totalMoves: 10
   levelGoals:
   - rid: 4486749039363358783

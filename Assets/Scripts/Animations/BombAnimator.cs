@@ -50,6 +50,12 @@ public class BombAnimator : BoosterAnimatorBase
         {
             if (node == sourceNode) continue; // Kendini tekrar patlatma
 
+            // 1. Bu blok başka bir animatörün (örneğin tetiklenen bir bombanın) ana objesiyse, ona DOKUNMA! O kendi animatörüyle patlayacak.
+            if (BoardView.Instance.ActiveBoosterSources.Contains(node)) continue;
+
+            // 2. Bu blok roketin çaprazından veya başka bir patlamadan dolayı zaten patladıysa, tekrar VFX oynatıp çorba yapma.
+            if (!node.gameObject.activeInHierarchy) continue;
+
             // Kutunun/Bloğun olduğu yerde parçalanma efektini oynat
             VFXManager.Instance.PlayVFX(blockDestroyVFXType, node.transform.position);
 
@@ -60,6 +66,6 @@ public class BombAnimator : BoosterAnimatorBase
         yield return new WaitForSeconds(delayAfterComplete);
 
         // 4. TEMİZLİK: Atasından gelen ortak bitiriş metodunu çağır (Objeleri havuza at ve yerçekimini başlat)
-        FinishAnimation(affectedNodes, onComplete);
+        FinishAnimation(sourceNode, affectedNodes, onComplete);
     }
 }

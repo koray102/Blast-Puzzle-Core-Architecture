@@ -12,18 +12,31 @@ public abstract class BoosterAnimatorBase : MonoBehaviour
     public List<BoosterType> HandledTypes => handledTypes;
 
     // Bütün booster'ların animasyon bitince yapacağı ortak temizlik işlemi
-    protected void FinishAnimation(List<NodeView> affectedNodes, Action onComplete)
+    // Parametreye NodeView sourceNode EKLENDİ!
+    // Parametreye NodeView sourceNode EKLENDİ!
+    protected void FinishAnimation(NodeView sourceNode, List<NodeView> affectedNodes, Action onComplete)
     {
-        // Blokları havuza at
         foreach (var node in affectedNodes)
         {
-            if (node != null && node.gameObject.activeSelf)
+            // Eğer bu node, ŞU ANDA animasyonu oynayan DİĞER bir booster ise onu havuza ATMA!
+            if (node != null && node != sourceNode && BoardView.Instance.ActiveBoosterSources.Contains(node))
+            {
+                continue;
+            }
+
+            // Çifte havuzlamayı önlemek için aktiflik kontrolü
+            if (node != null && node.gameObject.activeInHierarchy)
             {
                 _pool.ReturnNode(node); 
             }
         }
 
-        // BoardView'a "Benim işim bitti, kilidi aç ve yerçekimini başlat" de
+        // Kendi objemizi de işimiz bittiği için havuza güvenle atabiliriz
+        if (sourceNode != null && sourceNode.gameObject.activeInHierarchy)
+        {
+            _pool.ReturnNode(sourceNode);
+        }
+
         onComplete?.Invoke();
     }
 

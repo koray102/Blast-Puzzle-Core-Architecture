@@ -36,5 +36,6 @@ public enum VFXType
 {
     BlockDestroy,
     RocketExplosion,
-    BombExplosion
+    BombExplosion,
+    DiscoBallExplosion
 }

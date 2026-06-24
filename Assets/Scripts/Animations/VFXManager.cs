@@ -15,6 +15,9 @@ public class VFXManager : MonoBehaviour
     }
 
     [SerializeField] private List<VFXPoolData> poolSettings;
+
+    [Header("Global Settings")]
+    [SerializeField] private float globalZOffset = -1.5f;
     
     private Dictionary<VFXType, Queue<ParticleSystem>> _vfxPools;
 
@@ -65,7 +68,9 @@ public class VFXManager : MonoBehaviour
         // Ekstra Güvenlik
         if (vfx == null) return;
 
-        vfx.transform.position = position;
+        Vector3 offsetPosition = new Vector3(position.x, position.y, position.z + globalZOffset);
+        vfx.transform.position = offsetPosition;
+        
         vfx.gameObject.SetActive(true);
         vfx.Play();
 

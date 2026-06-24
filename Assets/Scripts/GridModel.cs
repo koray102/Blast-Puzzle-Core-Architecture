@@ -373,11 +373,10 @@ public class GridModel
 
     private void ActivateBooster(Node startBooster)
     {
-        List<Node> nodesToDestroy = new List<Node>();
-        List<Node> bubblesToPop = new List<Node>();
-        
-        // Zincirleme reaksiyonları yönetmek için kuyruk (Queue)
+        // 1. ZİNCİRLEME YÖNETİMİ İÇİN LİSTELER
         Queue<Node> boostersToTrigger = new Queue<Node>();
+        List<Node> allNodesToClear = new List<Node>(); // En son Model'den silinecek tüm objeler
+        List<Node> bubblesToPop = new List<Node>();
 
         boostersToTrigger.Enqueue(startBooster);
         startBooster.IsMatched = true;
@@ -386,51 +385,43 @@ public class GridModel
         {
             Node currentBooster = boostersToTrigger.Dequeue();
             
-            // Booster'ın kendisini de yok edilecekler listesine ekle
-            nodesToDestroy.Add(currentBooster);
+            // Bu booster'ın kendisini de oyun sonu temizliği için listeye al
+            allNodesToClear.Add(currentBooster);
 
-            // Hedef alanı belirle
+            // SADECE ŞU ANKİ BOOSTER'IN patlatacağı hedefler (View'a gidecek liste)
             List<Node> targetNodes = new List<Node>();
+            List<Node> specificDestroyedNodes = new List<Node>(); 
 
+            // --- HEDEF BELİRLEME MANTIĞI (Aynen Kalıyor) ---
             if (currentBooster.Booster == BoosterType.RocketHorizontal)
             {
-                // Yatay ekseni hedefe al
                 for (int x = 0; x < Width; x++) targetNodes.Add(GetNode(x, currentBooster.Y));
             }
             else if (currentBooster.Booster == BoosterType.RocketVertical)
             {
-                // Dikey ekseni hedefe al
                 for (int y = 0; y < Height; y++) targetNodes.Add(GetNode(currentBooster.X, y));
             }
-            else if (currentBooster.Booster == BoosterType.Bomb) // BOMBA MANTIĞI (3x3 ALAN)
+            else if (currentBooster.Booster == BoosterType.Bomb) 
             {
-                // Merkezden 1 birim sağ/sol ve aşağı/yukarı tarama yap
                 for (int x = currentBooster.X - 1; x <= currentBooster.X + 1; x++)
                 {
                     for (int y = currentBooster.Y - 1; y <= currentBooster.Y + 1; y++)
                     {
                         Node targetNode = GetNode(x, y);
-                        // Eğer tahta dışına çıkmadıysa hedeflere ekle
-                        if (targetNode != null)
-                        {
-                            targetNodes.Add(targetNode);
-                        }
+                        if (targetNode != null) targetNodes.Add(targetNode);
                     }
                 }
-            }else if (currentBooster.Booster == BoosterType.DiscoBall)
+            }
+            else if (currentBooster.Booster == BoosterType.DiscoBall)
             {
-                // 1. Tahtada en çok bulunan rengi bul
                 BlockType targetColor = GetMostAbundantColor();
-
-                // 2. O renkteki tüm hücreleri hedefe al
                 for (int x = 0; x < Width; x++)
                 {
                     for (int y = 0; y < Height; y++)
                     {
                         Node targetNode = GetNode(x, y);
-                        
-                        // Eğer hücrede aradığımız renk varsa (Üstünde balon olsa bile ColorBlock durduğu için eşleşir)
-                        if (targetNode != null && targetNode.ColorBlock == targetColor)
+                        // KRİTİK DÜZELTME: Sadece hedef renkteki ve henüz EŞLEŞMEMİŞ blokları listeye al
+                        if (targetNode != null && targetNode.ColorBlock == targetColor && !targetNode.IsMatched) 
                         {
                             targetNodes.Add(targetNode);
                         }
@@ -438,7 +429,7 @@ public class GridModel
                 }
             }
 
-            // Hedef hattındaki objeleri incele ve karar ver (Bu kısım hiç değişmiyor!)
+            // --- HEDEFLERİ İNCELE VE ZİNCİRLEMEYİ KUR ---
             foreach (Node target in targetNodes)
             {
                 if (target == null || target.IsMatched) continue;
@@ -448,26 +439,32 @@ public class GridModel
 
                 if (target.Obstacle == ObstacleType.Bubble)
                 {
-                    bubblesToPop.Add(target); // Sadece zarı patlar
+                    bubblesToPop.Add(target); 
                 }
                 else if (target.Booster != BoosterType.None)
                 {
-                    // ZİNCİRLEME REAKSİYON: Bomba roketin ucuna değerse, roketi ateşler!
+                    // ZİNCİRLEME REAKSİYON: Başka bir booster tetiklendi!
                     boostersToTrigger.Enqueue(target);
+                    // Onu da bu patlamanın kurbanı olarak görsel listeye ekle
+                    specificDestroyedNodes.Add(target); 
                 }
                 else
                 {
-                    nodesToDestroy.Add(target); // Kutu veya Renk yok olur
+                    specificDestroyedNodes.Add(target); 
+                    allNodesToClear.Add(target); // Temizlik listesine ekle
                 }
             }
+
+            // ÇOK KRİTİK DEĞİŞİKLİK: 
+            // Her booster kuyruktan çıktığında KENDİ EVENTİNİ fırlatır!
+            // Böylece View, hepsi için ayrı ayrı animatör çalıştırır ve hepsini KORUMA KALKANINA alır.
+            OnBoosterDetonated?.Invoke(currentBooster, specificDestroyedNodes);
         }
 
-        // DİKKAT: Normal patlama yerine Rocket/Bomb event'ini fırlatıyoruz!
-        OnBoosterDetonated?.Invoke(startBooster, nodesToDestroy);
-
-        if (nodesToDestroy.Count > 0)
+        // 2. TÜM ZİNCİRLEME REAKSİYON BİTTİKTEN SONRA VERİLERİ (Modeli) TEMİZLE
+        if (allNodesToClear.Count > 0)
         {
-            foreach (Node node in nodesToDestroy)
+            foreach (Node node in allNodesToClear)
             {
                 node.ColorBlock = BlockType.None;
                 node.Booster = BoosterType.None; 
@@ -480,7 +477,7 @@ public class GridModel
             }
         }
 
-        // 2. Sadece zarı patlayan balonlar varsa (Silinmeyeceklerse) onları normal güncelle
+        // Balonları güncelle
         if (bubblesToPop.Count > 0)
         {
             foreach (Node node in bubblesToPop)
@@ -497,6 +494,7 @@ public class GridModel
 
 
     // Tahtadaki en popüler rengi bulan yardımcı metod
+    // GridModel.cs içindeki metod:
     private BlockType GetMostAbundantColor()
     {
         Dictionary<BlockType, int> colorCounts = new Dictionary<BlockType, int>();
@@ -506,8 +504,8 @@ public class GridModel
             for (int y = 0; y < Height; y++)
             {
                 Node node = GetNode(x, y);
-                // Sadece rengi olan blokları sayıyoruz (Boşlukları veya salt engelleri saymıyoruz)
-                if (node != null && node.ColorBlock != BlockType.None)
+                // KRİTİK DÜZELTME: Zaten eşleşmiş (başka bir booster tarafından patlatılmakta olan) blokları SAYMA!
+                if (node != null && node.ColorBlock != BlockType.None && !node.IsMatched)
                 {
                     if (!colorCounts.ContainsKey(node.ColorBlock))
                     {
@@ -530,7 +528,7 @@ public class GridModel
             }
         }
 
-        // Eğer haritada hiç renk kalmamışsa (çok nadir edge-case) rastgele bir renk seç
+        // Eğer uygun renk kalmadıysa (Tüm tahta zaten patlıyorsa) rastgele seç
         if (mostAbundant == BlockType.None)
         {
             mostAbundant = (BlockType)UnityEngine.Random.Range(1, 6);

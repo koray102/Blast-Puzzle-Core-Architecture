@@ -6,12 +6,52 @@ public class BoardView : MonoBehaviour
     [Header("References")]
     [SerializeField] private BlockFactory blockFactory;
     [SerializeField] private ObjectPool _pool; // Patlatma sonrası havuza göndermek için
+    [SerializeField] private Transform BoosterAnimatorsParent;
     
     [Header("Layout Settings")]
     [SerializeField] private float spacing = 1.05f;
     
+    
+    [Header("Spawn Animation Settings")]
+    [SerializeField] private float spawnBlockFallDelay = 0.04f;
+
+
+    // General Settings
     private NodeView[,] _viewGrid;
-    private int _activeAnimations = 0;
+
+    // Animation settings
+    private HashSet<NodeView> _animatingNodes = new HashSet<NodeView>();
+    private int _systemLocks = 0; // Sadece Controller'ın kullandığı genel gecikmeler için
+    private Dictionary<BoosterType, BoosterAnimatorBase> _animatorDict;
+
+
+    private void Awake()
+    {
+        // 1. Sözlüğü başlat
+        _animatorDict = new Dictionary<BoosterType, BoosterAnimatorBase>();
+
+        // 2. OTOMATİK KEŞİF (Auto-Discovery)
+        // Performans için animatörlerin BoardView ile aynı objede veya onun içinde (Child) olduğunu varsayıyoruz.
+        // Eğer animatörler sahnede bambaşka yerlerde duracaksa bunu "FindObjectsOfType<BoosterAnimatorBase>()" yapabilirsin.
+        BoosterAnimatorBase[] foundAnimators = BoosterAnimatorsParent.GetComponentsInChildren<BoosterAnimatorBase>();
+
+        foreach (var animator in foundAnimators)
+        {
+            foreach (var type in animator.HandledTypes)
+            {
+                // Güvenlik Kontrolü: Eğer aynı tipi iki farklı animatör sahiplenmeye çalışıyorsa çökme, sadece uyar!
+                if (!_animatorDict.ContainsKey(type))
+                {
+                    _animatorDict.Add(type, animator);
+                    Debug.Log($"[BoardView] {type} animatörü başarıyla kaydedildi: {animator.gameObject.name}");
+                }
+                else
+                {
+                    Debug.LogError($"[BoardView] ÇAKIŞMA! {type} tipi zaten {_animatorDict[type].gameObject.name} tarafından kullanılıyor. {animator.gameObject.name} yoksayıldı!");
+                }
+            }
+        }
+    }
 
 
     public void BuildBoard(GridModel model)
@@ -23,6 +63,7 @@ public class BoardView : MonoBehaviour
         model.OnBlocksFell += HandleBlocksFell;
         model.OnNewBlocksSpawned += HandleNewBlocksSpawned;
         model.OnNodesUpdated += HandleNodesUpdated;
+        model.OnBoosterDetonated += HandleBoosterDetonated;
 
         // 2. Tahtayı İlk Kez Diziyoruz
         for (int x = 0; x < model.Width; x++)
@@ -70,9 +111,9 @@ public class BoardView : MonoBehaviour
             BoardController.Instance.Model.OnBlocksFell -= HandleBlocksFell;
             BoardController.Instance.Model.OnNewBlocksSpawned -= HandleNewBlocksSpawned;
             BoardController.Instance.Model.OnNodesUpdated -= HandleNodesUpdated;
+            BoardController.Instance.Model.OnBoosterDetonated -= HandleBoosterDetonated;
         }
     }
-
 
     private Vector3 CalculateWorldPosition(int x, int y)
     {
@@ -89,11 +130,31 @@ public class BoardView : MonoBehaviour
         return new Vector3(x * spacing, y * spacing, 0) + centerOffset;
     }
 
+
     // --- EVENT DİNLEYİCİLERİ (OBSERVERS) ---
     
     // Manuel kilitleme için yardımcı metodlar
-    public void LockState() => _activeAnimations++;
-    public void UnlockState() { _activeAnimations--; CheckAndUnlockState(); }
+    // --- 1. CONTROLLER İÇİN SİSTEM KİLİTLERİ ---
+    public void LockState() => _systemLocks++;
+    public void UnlockState() { _systemLocks--; CheckAndUnlockState(); }
+
+    // --- 2. BLOKLAR İÇİN KİMLİKLİ KİLİTLER (Yeni eklenenler) ---
+    public void LockNode(NodeView node) 
+    {
+        //Debug.Log($"{node} locked");
+        if (node != null) _animatingNodes.Add(node);
+    }
+
+    public void UnlockNode(NodeView node) 
+    {
+        if (node != null && _animatingNodes.Contains(node))
+        {
+            //Debug.Log($"{node} released");
+            _animatingNodes.Remove(node);
+        }
+        CheckAndUnlockState();
+    }
+    
 
     private void HandleBlocksMatched(List<Node> matchedNodes)
     {
@@ -149,38 +210,49 @@ public class BoardView : MonoBehaviour
         foreach (var kvp in knockbackVectors)
         {
             NodeView view = kvp.Key;
-            Vector3 pushDirection = kvp.Value.normalized; // Vektörü normalize et ki çaprazlar çok uzağa uçmasın
+            Vector3 pushDirection = kvp.Value.normalized;
 
-            _activeAnimations++;
+            LockNode(view); // Node'u kilit listesine al
+
             view.PlayKnockback(pushDirection, () => 
             {
-                _activeAnimations--; 
-                CheckAndUnlockState();
+                UnlockNode(view); // Node işini bitirince listeden çıkar
             });
         }
     }
 
-    // Her tıklamada sayacı sıfırlamak için güvenlik metodu
-    public void ResetAnimationCounter()
-    {
-        _activeAnimations = 0;
-    }
 
     // Sayaç sıfırlandıysa kilidi açan merkez
     public void CheckAndUnlockState()
     {
-        if (_activeAnimations <= 0)
+        // HEM sistem kilidi kalmadıysa HEM DE hareket eden blok kalmadıysa kilidi aç!
+        if (_systemLocks <= 0 && _animatingNodes.Count == 0)
         {
-            _activeAnimations = 0; // Negatife düşmemesi için garantiye alıyoruz
-            if (BoardController.Instance != null)
+            _systemLocks = 0; // Güvenlik için eksiye düşmesini engelle
+            if (BoardController.Instance != null && BoardController.Instance.State == GameState.Processing)
             {
-                if (BoardController.Instance.State == GameState.Processing)
-                {
-                    BoardController.Instance.SetState(GameState.WaitingForInput);
-                }
+                BoardController.Instance.SetState(GameState.WaitingForInput);
             }
         }
     }
+
+
+    public void ResetAnimationCounter()
+    {
+        _systemLocks = 0;
+        _animatingNodes.Clear();
+    }
+
+
+    // Controller'ın yerçekimini ne zaman başlatacağını bilmesi için durum bildirici
+    public bool IsPlayingEffects()
+    {
+        // _systemLocks > 1 : Controller'ın en başta attığı (1) numaralı ana kilit haricinde, 
+        // roket veya bomba animatörlerinin attığı ekstra kilitler varsa.
+        // _animatingNodes.Count > 0 : Ekranda hala geri tepme (knockback) yapan bloklar varsa.
+        return _systemLocks > 1 || _animatingNodes.Count > 0;
+    }
+
 
     private void HandleBlocksFell(List<BlockMoveData> moveDataList)
     {
@@ -195,37 +267,83 @@ public class BoardView : MonoBehaviour
             _viewGrid[moveData.ToX, moveData.ToY] = blockToMove;
             blockToMove.UpdateCoordinates(moveData.ToX, moveData.ToY);
 
-            // DEĞİŞİKLİK: Sayacı artır ve hareketi başlat
-            _activeAnimations++;
+            LockNode(blockToMove);
+
             blockToMove.MoveTo(targetPos, () => 
             {
-                _activeAnimations--; // Hareket bitince sayacı düşür
-                CheckAndUnlockState(); // Sıfırlandıysa kilidi aç
+                UnlockNode(blockToMove);
             });
         }
     }
+
 
     private void HandleNewBlocksSpawned(List<Node> newNodes)
     {
         int height = BoardController.Instance.Model.Height;
+        int width = BoardController.Instance.Model.Width;
+
+        // 1. Her sütun için en alttaki hedef Y koordinatını bul
+        int[] lowestYPerColumn = new int[width];
+        for (int i = 0; i < width; i++)
+        {
+            lowestYPerColumn[i] = int.MaxValue;
+        }
 
         foreach (var node in newNodes)
         {
+            if (node.Y < lowestYPerColumn[node.X])
+            {
+                lowestYPerColumn[node.X] = node.Y;
+            }
+        }
+
+        // 2. Blokları hizala ve şelale efektiyle düşür
+        foreach (var node in newNodes)
+        {
             Vector3 targetPos = CalculateWorldPosition(node.X, node.Y);
-            Vector3 spawnPos = CalculateWorldPosition(node.X, height + 1); 
+            
+            int lowestY = lowestYPerColumn[node.X];
+            
+            // Sıralı dizilim için yükseklik farkı
+            int spawnYOffset = (node.Y - lowestY) + 1;
+            Vector3 spawnPos = CalculateWorldPosition(node.X, height + spawnYOffset); 
 
             NodeView newBlock = blockFactory.SpawnBlock(node, spawnPos);
             _viewGrid[node.X, node.Y] = newBlock;
 
-            // DEĞİŞİKLİK: Sayacı artır ve hareketi başlat
-            _activeAnimations++;
-            newBlock.MoveTo(targetPos, () => 
-            {
-                _activeAnimations--; // Hareket bitince sayacı düşür
-                CheckAndUnlockState(); // Sıfırlandıysa kilidi aç
-            });
+            // ÇOK KRİTİK: Kilidi anında atıyoruz ki bekleme süresince orkestra yanlışlıkla kilidi açmasın
+            LockNode(newBlock);
+
+            // Gecikme süresi: Yukarıdaki bloklar daha geç düşmeye başlar
+            float delay = (node.Y - lowestY) * spawnBlockFallDelay; 
+
+            // Hareketi doğrudan vermek yerine, bekleme yapacak Coroutine'i başlatıyoruz
+            StartCoroutine(StaggeredDropRoutine(newBlock, targetPos, delay));
         }
     }
+
+    
+    private System.Collections.IEnumerator StaggeredDropRoutine(NodeView block, Vector3 targetPos, float delay)
+    {
+        if (delay > 0f)
+        {
+            yield return new WaitForSeconds(delay);
+        }
+
+        // Eğer bekleme süresinde obje beklenmedik bir şekilde kapanırsa hatayı önle
+        if (block == null || !block.gameObject.activeInHierarchy)
+        {
+            UnlockNode(block);
+            yield break; 
+        }
+
+        // Süre doldu, düşüşü başlat! Bittiğinde de kilidi aç.
+        block.MoveTo(targetPos, () => 
+        {
+            UnlockNode(block);
+        });
+    }
+
 
     private void HandleNodesUpdated(List<Node> updatedNodes)
     {
@@ -240,6 +358,47 @@ public class BoardView : MonoBehaviour
         }
     }
 
+
+    private void HandleBoosterDetonated(Node sourceBooster, List<Node> affectedNodes)
+    {
+        NodeView sourceView = _viewGrid[sourceBooster.X, sourceBooster.Y];
+        List<NodeView> affectedViews = new List<NodeView>();
+        
+        foreach (Node node in affectedNodes)
+        {
+            NodeView view = _viewGrid[node.X, node.Y];
+            if (view != null)
+            {
+                affectedViews.Add(view);
+                _viewGrid[node.X, node.Y] = null; // Yerçekimi için boşluk aç
+            }
+        }
+
+        // Sözlükten bak. Bu Booster tipi için bir animatör ayarlanmış mı?
+        if (_animatorDict.TryGetValue(sourceBooster.Booster, out BoosterAnimatorBase activeAnimator))
+        {
+            Debug.Log("Animation played");
+            LockState(); // Orkestrayı kitle
+            
+            // Seçilen animatöre işi devret
+            activeAnimator.PlayAnimation(sourceView, affectedViews, () => 
+            {
+                UnlockState(); // Animasyon bitince orkestranın kilidini aç
+            });
+        }
+        else
+        {
+            Debug.Log("Animation can not be played");
+            // Animatör atanmamışsa (unutulmuşsa) güvenli bir şekilde objeleri sil
+            foreach (var view in affectedViews)
+            {
+                _pool.ReturnNode(view);
+            }
+            if (sourceView != null) _pool.ReturnNode(sourceView);
+        }
+    }
+
+
     // Memory Leak (Bellek sızıntısı) olmaması için oyun bitince abonelikleri siliyoruz
     private void OnDestroy()
     {
@@ -249,6 +408,7 @@ public class BoardView : MonoBehaviour
             BoardController.Instance.Model.OnBlocksFell -= HandleBlocksFell;
             BoardController.Instance.Model.OnNewBlocksSpawned -= HandleNewBlocksSpawned;
             BoardController.Instance.Model.OnNodesUpdated -= HandleNodesUpdated;
+            BoardController.Instance.Model.OnBoosterDetonated -= HandleBoosterDetonated;
         }
     }
 }

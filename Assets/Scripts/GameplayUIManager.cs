@@ -44,9 +44,9 @@ public class GameplayUIManager : MonoBehaviour
     {
         nextLevelButton.onClick.AddListener(OnNextLevelClicked);
         retryButton.onClick.AddListener(OnRetryClicked);
-        pauseButton.onClick.AddListener(OpenPauseMenu);
-        resumeButton.onClick.AddListener(ClosePauseMenu);
-        quitButton.onClick.AddListener(QuitGame);
+        //pauseButton.onClick.AddListener(OpenPauseMenu);
+        //resumeButton.onClick.AddListener(ClosePauseMenu);
+        //quitButton.onClick.AddListener(QuitGame);
     }
     
 
@@ -55,7 +55,7 @@ public class GameplayUIManager : MonoBehaviour
     {
         winPanel.SetActive(false);
         losePanel.SetActive(false);
-        pauseMenuPanel.SetActive(false);
+        // pauseMenuPanel.SetActive(false);
 
         UpdateMoves(startingMoves);
         SpawnGoalViews(activeGoals);

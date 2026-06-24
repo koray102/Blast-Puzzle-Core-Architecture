@@ -67,6 +67,6 @@
         "*.sln": "*.csproj",
         "*.slnx": "*.csproj"
     },
-    "dotnet.defaultSolution": "Blast Puzzle Core Architecture.slnx",
+    "dotnet.defaultSolution": "Blast-Puzzle-Core-Architecture.slnx",
     "dotnet.enableWorkspaceBasedDevelopment": false
 }

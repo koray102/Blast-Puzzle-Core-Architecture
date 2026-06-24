@@ -4,6 +4,7 @@ using UnityEngine;
 public class LevelManager : MonoBehaviour
 {
     public static LevelManager Instance { get; private set; }
+    public static LevelData TargetLevelData;
 
     [Header("Level Configuration")]
     [SerializeField] internal LevelData currentLevelData;
@@ -23,6 +24,7 @@ public class LevelManager : MonoBehaviour
 
     private void Start()
     {
+        if(TargetLevelData != null) {currentLevelData = TargetLevelData;}
         StartLevel();
     }
 
@@ -49,6 +51,9 @@ public class LevelManager : MonoBehaviour
 
         // 2. Tahta %100 oluştuğuna göre artık güvenle abone olabiliriz (Race Condition çözüldü)
         BoardController.Instance.Model.OnBlocksMatched += HandleBlocksMatched;
+        
+        // YENİ: Roket patlamalarını da dinle
+        BoardController.Instance.Model.OnBoosterDetonated += HandleBoosterDetonated;
     }
 
     // Modelden patlayan blokların listesi geldi
@@ -73,6 +78,22 @@ public class LevelManager : MonoBehaviour
         CheckWinLoseCondition();
     }
 
+    private void HandleBoosterDetonated(Node sourceBooster, List<Node> affectedNodes)
+    {
+        if (_isLevelEnded) return;
+
+        // Roketin/Bombanın yok ettiği tüm hedefleri sayaca bildir
+        foreach (Node node in affectedNodes)
+        {
+            foreach (var goal in currentLevelData.levelGoals)
+            {
+                goal.UpdateGoal(node);
+            }
+        }
+
+        CheckWinLoseCondition();
+    }
+    
     private void CheckWinLoseCondition()
     {
         bool allGoalsMet = true;
@@ -139,6 +160,7 @@ public class LevelManager : MonoBehaviour
         if (BoardController.Instance != null && BoardController.Instance.Model != null)
         {
             BoardController.Instance.Model.OnBlocksMatched -= HandleBlocksMatched;
+            BoardController.Instance.Model.OnBoosterDetonated -= HandleBoosterDetonated;
         }
     }
 }

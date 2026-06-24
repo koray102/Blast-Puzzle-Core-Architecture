@@ -12,6 +12,7 @@ public class GridModel
     public event Action<List<BlockMoveData>> OnBlocksFell;
     public event Action<List<Node>> OnNewBlocksSpawned;
     public event Action<List<Node>> OnNodesUpdated; // Sadece görseli yenilenecekler
+    public event Action<Node, List<Node>> OnBoosterDetonated;
 
 
     // DEĞİŞİKLİK: Parametre artık CellSetupData[,] alıyor
@@ -461,8 +462,37 @@ public class GridModel
             }
         }
 
-        // Toplanan tüm hedefleri tek seferde temizle ve eventleri fırlat
-        ExecuteDestruction(nodesToDestroy, bubblesToPop);
+        // DİKKAT: Normal patlama yerine Rocket/Bomb event'ini fırlatıyoruz!
+        OnBoosterDetonated?.Invoke(startBooster, nodesToDestroy);
+
+        if (nodesToDestroy.Count > 0)
+        {
+            foreach (Node node in nodesToDestroy)
+            {
+                node.ColorBlock = BlockType.None;
+                node.Booster = BoosterType.None; 
+                
+                if (node.Obstacle == ObstacleType.Box) 
+                {
+                    node.Obstacle = ObstacleType.None;
+                }
+                node.IsMatched = false;
+            }
+        }
+
+        // 2. Sadece zarı patlayan balonlar varsa (Silinmeyeceklerse) onları normal güncelle
+        if (bubblesToPop.Count > 0)
+        {
+            foreach (Node node in bubblesToPop)
+            {
+                if (node.Obstacle == ObstacleType.Bubble) 
+                {
+                    node.Obstacle = ObstacleType.None;
+                }
+                node.IsMatched = false;
+            }
+            OnNodesUpdated?.Invoke(bubblesToPop);
+        }
     }
 
 

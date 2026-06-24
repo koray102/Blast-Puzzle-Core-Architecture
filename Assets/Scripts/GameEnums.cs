@@ -31,3 +31,10 @@ public enum GameState
     Paused, 
     GameOver 
 }
+
+public enum VFXType
+{
+    BlockDestroy,
+    RocketExplosion,
+    BombExplosion
+}

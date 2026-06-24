@@ -116,6 +116,10 @@ public class BoardController : MonoBehaviour
     {
         yield return new WaitForSeconds(0.12f); // Patlama ile düşme arasındaki o sihirli boşluk
 
+        // 2. YENİ EKLENEN SİHİR: Roket/Bomba VFX'leri veya geri tepmeler sürüyorsa, 
+        // BoardView "Benim işim bitti" diyene kadar yerçekimini BEKLET!
+        yield return new WaitWhile(() => boardView.IsPlayingEffects());
+        
         Model.ApplyGravity();
         Model.FillEmptySpaces();
         

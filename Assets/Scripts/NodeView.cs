@@ -208,4 +208,12 @@ public class NodeView : MonoBehaviour
             temp.Invoke();
         }
     }
+    
+
+    private void OnDisable()
+    {
+        // EĞER obje bir şekilde havuza dönerse ve üzerinde yarım kalan bir callback varsa, 
+        // sistemi kilitli bırakmamak için callback'i zorla tetikle (Güvenlik ağı)
+        SafeExecuteCallback();
+    }
 }

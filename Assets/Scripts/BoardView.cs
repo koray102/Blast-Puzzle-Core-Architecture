@@ -212,6 +212,19 @@ public class BoardView : MonoBehaviour
     }
 
 
+    // MVC'ye uygun olarak, Controller sadece "Bu bloğa tıklama efekti ver" der, işi View yapar.
+    public void PlayBlockClickFeedback(NodeView clickedView, System.Action onComplete)
+    {
+        if (clickedView != null)
+        {
+            clickedView.PlayPumpAnimation(onComplete);
+        }
+        else
+        {
+            onComplete?.Invoke();
+        }
+    }
+
     private void HandleBlocksFell(List<BlockMoveData> moveDataList)
     {
         foreach (var moveData in moveDataList)
@@ -349,11 +362,13 @@ public class BoardView : MonoBehaviour
         // Animasyonu Oynat (Sen o önceki Invoke'u yukarı aldığın için node.Booster hala dolu geliyor!)
         if (_animatorDict.TryGetValue(sourceBooster.Booster, out BoosterAnimatorBase activeAnimator))
         {
-            LockState(); 
+            Debug.Log($"{activeAnimator} run lock state");
+            LockState();
             activeAnimator.PlayAnimation(sourceView, affectedViews, () => 
             {
                 // Animasyon bitti, kalkanı indir
                 ActiveBoosterSources.Remove(sourceView);
+                Debug.Log($"{activeAnimator} finish release state");
                 UnlockState(); 
             });
         }
@@ -420,6 +435,7 @@ public class BoardView : MonoBehaviour
         }
     }
 
+
     // --- YENİ: Animatörlerin kendi zamanlamasıyla çağıracağı Overload ---
     public void ApplyKnockback(List<NodeView> explodingViews)
     {
@@ -471,6 +487,7 @@ public class BoardView : MonoBehaviour
             });
         }
     }
+
 
     // Memory Leak (Bellek sızıntısı) olmaması için oyun bitince abonelikleri siliyoruz
     private void OnDestroy()

@@ -1,39 +1,188 @@
 using System;
+using System.Collections.Generic;
 using System.Linq;
 using UnityEditor;
 using UnityEngine;
 
-[CustomEditor(typeof(LevelData))]
-public class LevelDataEditor : Editor
+// Artık CustomEditor değil, bağımsız bir EditorWindow kullanıyoruz
+public class LevelDesignerWindow : EditorWindow
 {
+    // --- Window State (Pencere Durumu) ---
+    private List<LevelData> _allLevels = new List<LevelData>();
+    private int _currentLevelIndex = 0;
+    
+    private Vector2 _mainScrollPos;
+    private Vector2 _gridScrollPos;
+
+    // --- Paint State (Fırça Durumu) ---
     private enum PaintMode { ColorBlock, Obstacle, Booster, Clear }
     private PaintMode _currentMode = PaintMode.ColorBlock;
-
     private BlockType _selectedColor = BlockType.Red;
     private ObstacleType _selectedObstacle = ObstacleType.Box;
     private BoosterType _selectedBooster = BoosterType.RocketVertical;
 
     private Type[] _goalTypes;
 
+    // Üst menüye ekleme (Tools sekmesinden açabilirsin)
+    [MenuItem("Tools/Level Designer Window")]
+    public static void ShowWindow()
+    {
+        // Pencereyi aç ve ismini belirle
+        LevelDesignerWindow window = GetWindow<LevelDesignerWindow>("Level Designer");
+        window.minSize = new Vector2(500, 600);
+    }
+
     private void OnEnable()
     {
+        // Hedef tiplerini bul (Eski kodla aynı mantık)
         _goalTypes = AppDomain.CurrentDomain.GetAssemblies()
             .SelectMany(assembly => assembly.GetTypes())
             .Where(type => type.IsSubclassOf(typeof(LevelGoal)) && !type.IsAbstract)
             .ToArray();
+
+        LoadAllLevels();
     }
 
-    public override void OnInspectorGUI()
+    // Projedeki tüm LevelData SO'larını otomatik bulur!
+    private void LoadAllLevels()
     {
-        DrawDefaultInspector();
+        _allLevels.Clear();
+        string[] guids = AssetDatabase.FindAssets("t:LevelData");
+        
+        foreach (string guid in guids)
+        {
+            string path = AssetDatabase.GUIDToAssetPath(guid);
+            LevelData level = AssetDatabase.LoadAssetAtPath<LevelData>(path);
+            if (level != null)
+            {
+                _allLevels.Add(level);
+            }
+        }
+        
+        // İsimlerine göre sırala (Örn: Level_1, Level_2)
+        _allLevels = _allLevels.OrderBy(l => l.name).ToList();
+        
+        if (_currentLevelIndex >= _allLevels.Count) _currentLevelIndex = 0;
+    }
 
-        LevelData data = (LevelData)target;
+    private void OnGUI()
+    {
+        // Tüm içeriği kaydırılabilir yap
+        _mainScrollPos = EditorGUILayout.BeginScrollView(_mainScrollPos);
+
+        DrawNavigationBar();
+
+        if (_allLevels.Count == 0)
+        {
+            EditorGUILayout.HelpBox("Projede hiç LevelData ScriptableObject bulunamadı!", MessageType.Warning);
+            EditorGUILayout.EndScrollView();
+            return;
+        }
+
+        LevelData currentData = _allLevels[_currentLevelIndex];
+        SerializedObject serializedObject = new SerializedObject(currentData);
+
+        EditorGUILayout.Space(10);
+        
+        // Levelin diğer standart ayarlarını çiz (Hamle sayısı vs.)
+        EditorGUILayout.LabelField($"Şu An Düzenlenen: {currentData.name}", EditorStyles.boldLabel);
+        
+        serializedObject.Update();
+        
+        // 'useManualSetup', 'boardWidth', 'boardHeight', 'totalMoves' vb. özellikleri manuel çiziyoruz
+        DrawLevelSettings(serializedObject, currentData);
 
         // --- HEDEF (GOAL) EKLEME PANELİ ---
-        GUILayout.Space(20);
+        DrawGoalPanel(currentData);
+
+        if (currentData.useManualSetup)
+        {
+            DrawDesignerTool(serializedObject, currentData);
+        }
+
+        serializedObject.ApplyModifiedProperties();
+        
+        EditorGUILayout.EndScrollView();
+    }
+
+    private void DrawNavigationBar()
+    {
+        EditorGUILayout.BeginVertical("box");
+        GUILayout.Label("Level Navigasyonu", EditorStyles.boldLabel);
+        
+        EditorGUILayout.BeginHorizontal();
+
+        // Önceki Level Butonu
+        GUI.enabled = _currentLevelIndex > 0;
+        if (GUILayout.Button("◄ Önceki Level", GUILayout.Height(30)))
+        {
+            _currentLevelIndex--;
+            GUI.FocusControl(null); // Fokus sıfırla ki fieldlar buga girmesin
+        }
+        GUI.enabled = true;
+
+        // Ortada Açılır Menü (Tüm levelları listeden seçmek için)
+        if (_allLevels.Count > 0)
+        {
+            string[] levelNames = _allLevels.Select(l => l.name).ToArray();
+            _currentLevelIndex = EditorGUILayout.Popup(_currentLevelIndex, levelNames, GUILayout.Height(30));
+        }
+
+        // Sonraki Level Butonu
+        GUI.enabled = _currentLevelIndex < _allLevels.Count - 1;
+        if (GUILayout.Button("Sonraki Level ►", GUILayout.Height(30)))
+        {
+            _currentLevelIndex++;
+            GUI.FocusControl(null);
+        }
+        GUI.enabled = true;
+
+        EditorGUILayout.EndHorizontal();
+
+        if (GUILayout.Button("Levelları Yenile (Refresh)", GUILayout.Height(25)))
+        {
+            LoadAllLevels();
+        }
+
+        EditorGUILayout.EndVertical();
+    }
+
+    private void DrawLevelSettings(SerializedObject serializedObject, LevelData currentData)
+    {
+        EditorGUILayout.BeginVertical("box");
+        
+        SerializedProperty nextLevelProp = serializedObject.FindProperty("nextLevel");
+        SerializedProperty totalMovesProp = serializedObject.FindProperty("totalMoves");
+        SerializedProperty boardWidthProp = serializedObject.FindProperty("boardWidth");
+        SerializedProperty boardHeightProp = serializedObject.FindProperty("boardHeight");
+        SerializedProperty useManualSetupProp = serializedObject.FindProperty("useManualSetup");
+        SerializedProperty availableColorsProp = serializedObject.FindProperty("availableColors");
+
+        EditorGUILayout.PropertyField(nextLevelProp);
+        EditorGUILayout.PropertyField(totalMovesProp);
+        EditorGUILayout.PropertyField(boardWidthProp);
+        EditorGUILayout.PropertyField(boardHeightProp);
+        EditorGUILayout.PropertyField(availableColorsProp, true); // true = diziyi genişletilebilir yapar
+        EditorGUILayout.PropertyField(useManualSetupProp);
+        
+        EditorGUILayout.EndVertical();
+    }
+
+    private void DrawGoalPanel(LevelData data)
+    {
+        GUILayout.Space(10);
         GUILayout.Label("✨ Hedef Ekleme Paneli", EditorStyles.boldLabel);
 
         EditorGUILayout.BeginVertical("box");
+        
+        // Mevcut hedefleri Inspector gibi çiz (Hedef detaylarını ayarlayabilmek için)
+        SerializedObject serializedObject = new SerializedObject(data);
+        SerializedProperty goalsProp = serializedObject.FindProperty("levelGoals");
+        EditorGUILayout.PropertyField(goalsProp, true);
+        serializedObject.ApplyModifiedProperties();
+
+        EditorGUILayout.Space(10);
+        
         if (_goalTypes != null)
         {
             foreach (Type type in _goalTypes)
@@ -41,11 +190,9 @@ public class LevelDataEditor : Editor
                 if (GUILayout.Button($"+ {type.Name} Ekle", GUILayout.Height(25)))
                 {
                     Undo.RecordObject(data, "Hedef Ekle"); 
-                    
                     LevelGoal newGoal = (LevelGoal)Activator.CreateInstance(type);
                     newGoal.Init();
                     data.levelGoals.Add(newGoal);
-                    
                     EditorUtility.SetDirty(data);
                 }
             }
@@ -57,24 +204,17 @@ public class LevelDataEditor : Editor
             if (GUILayout.Button("Son Hedefi Sil", GUILayout.Height(20)))
             {
                 Undo.RecordObject(data, "Hedef Sil");
-                
                 data.levelGoals.RemoveAt(data.levelGoals.Count - 1);
                 EditorUtility.SetDirty(data);
             }
         }
         EditorGUILayout.EndVertical();
-        // ----------------------------------
+    }
 
-
-        if (!data.useManualSetup)
-        {
-            return;
-        }
-
+    private void DrawDesignerTool(SerializedObject serializedObject, LevelData data)
+    {
         EditorGUILayout.Space(20);
         EditorGUILayout.LabelField("--- LEVEL DESIGNER TOOL ---", EditorStyles.boldLabel);
-
-        serializedObject.Update();
 
         // --- PALET / FIRÇA AYARLARI PANELİ ---
         EditorGUILayout.BeginVertical("box");
@@ -84,21 +224,15 @@ public class LevelDataEditor : Editor
         switch (_currentMode)
         {
             case PaintMode.ColorBlock:
-                // SADECE AVAILABLE COLORS LİSTESİNDEKİ RENKLERİ GÖSTER
                 if (data.availableColors == null || data.availableColors.Count == 0)
                 {
                     EditorGUILayout.HelpBox("Lütfen önce yukarıdaki 'Available Colors' listesine renk ekleyin!", MessageType.Warning);
                 }
                 else
                 {
-                    // Seçili rengin listedeki indeksini bul, yoksa 0'a sabitle
                     int currentIndex = Mathf.Max(0, data.availableColors.IndexOf(_selectedColor));
-                    
-                    // Listedeki renkleri string dizisine çevirip Popup (Açılır menü) olarak göster
                     string[] options = data.availableColors.Select(c => c.ToString()).ToArray();
                     currentIndex = EditorGUILayout.Popup("Boyanacak Renk", currentIndex, options);
-                    
-                    // Seçilen rengi değişkene ata
                     _selectedColor = data.availableColors[currentIndex];
                 }
                 break;
@@ -116,7 +250,7 @@ public class LevelDataEditor : Editor
         EditorGUILayout.Space(15);
         EditorGUILayout.LabelField("Tahta Görünümü (Tıklayarak Boyayın)", EditorStyles.miniBoldLabel);
 
-        // --- GÖRSEL MATRİS (GRID) ÇİZİMİ ---
+        // --- GÖRSEL MATRİS (GRID) ÇİZİMİ (SCROLL İLE) ---
         SerializedProperty startingBoardProp = serializedObject.FindProperty("startingBoard");
 
         if (startingBoardProp == null || startingBoardProp.arraySize != data.boardHeight)
@@ -124,6 +258,9 @@ public class LevelDataEditor : Editor
             EditorGUILayout.HelpBox("Grid dizilimi hazırlanıyor... Değişiklikleri görmek için useManualSetup kutusunu kapatıp açın.", MessageType.Info);
             return;
         }
+
+        // Devasa levelların sığması için Grid'i kendi özel ScrollView'unun içine alıyoruz
+        _gridScrollPos = EditorGUILayout.BeginScrollView(_gridScrollPos, "box", GUILayout.Height(350));
 
         for (int y = data.boardHeight - 1; y >= 0; y--)
         {
@@ -149,6 +286,7 @@ public class LevelDataEditor : Editor
                 Color originalColor = GUI.backgroundColor;
                 GUI.backgroundColor = GetCellVisualColor((BlockType)colorProp.enumValueIndex, (ObstacleType)obstacleProp.enumValueIndex, (BoosterType)boosterProp.enumValueIndex);
 
+                // Düğmelerin boyutu
                 if (GUILayout.Button(cellText, GUILayout.Width(65), GUILayout.Height(50)))
                 {
                     ApplyPaintBrush(colorProp, obstacleProp, boosterProp, data);
@@ -160,7 +298,7 @@ public class LevelDataEditor : Editor
             EditorGUILayout.EndHorizontal();
         }
 
-        serializedObject.ApplyModifiedProperties();
+        EditorGUILayout.EndScrollView(); // Grid scroll sonu
     }
 
     private string GetCellTextSummary(SerializedProperty colorProp, SerializedProperty obstacleProp, SerializedProperty boosterProp)
@@ -192,13 +330,11 @@ public class LevelDataEditor : Editor
         }
     }
 
-    // Metoda data parametresi eklendi, böylece fırça atamasında güvenlik kontrolü yapılabilir
     private void ApplyPaintBrush(SerializedProperty colorProp, SerializedProperty obstacleProp, SerializedProperty boosterProp, LevelData data)
     {
         switch (_currentMode)
         {
             case PaintMode.ColorBlock:
-                // Güvenlik: Eğer listede hiç renk yoksa boyama yapma
                 if (data.availableColors == null || data.availableColors.Count == 0) return;
                 
                 colorProp.enumValueIndex = (int)_selectedColor;

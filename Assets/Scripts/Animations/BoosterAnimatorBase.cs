@@ -32,7 +32,7 @@ public abstract class BoosterAnimatorBase : MonoBehaviour
         }
 
         // Kendi objemizi de işimiz bittiği için havuza güvenle atabiliriz
-        if (sourceNode != null && sourceNode.gameObject.activeInHierarchy)
+        if (sourceNode != null)
         {
             _pool.ReturnNode(sourceNode);
         }

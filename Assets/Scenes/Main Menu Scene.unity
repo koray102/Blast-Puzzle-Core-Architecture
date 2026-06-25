@@ -540,8 +540,11 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: f56e976649a59c3438fb19fa72849fc6, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  mainPanel: {fileID: 1683448998}
-  settingsPanel: {fileID: 1770950877}
+  allPanels:
+  - type: 0
+    panelObject: {fileID: 1683448998}
+  - type: 1
+    panelObject: {fileID: 1770950877}
   playButton: {fileID: 1891850658}
   settingsButton: {fileID: 1904953406}
   closeSettingsButton: {fileID: 1265360574}
@@ -1271,7 +1274,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   m_Material: {fileID: 0}
-  m_Color: {r: 1, g: 1, b: 1, a: 0.392}
+  m_Color: {r: 0, g: 0, b: 0, a: 0.392}
   m_RaycastTarget: 1
   m_RaycastPadding: {x: 0, y: 0, z: 0, w: 0}
   m_Maskable: 1

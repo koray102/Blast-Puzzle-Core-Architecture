@@ -84,8 +84,22 @@ public class DiscoBallAnimator : BoosterAnimatorBase
             // 2. Bu blok roketin çaprazından veya başka bir patlamadan dolayı zaten patladıysa, tekrar VFX oynatıp çorba yapma.
             if (!node.gameObject.activeInHierarchy) continue;
 
-            VFXManager.Instance.PlayVFX(blockDestroyVFXType, node.transform.position);
-            node.gameObject.SetActive(false);
+            // --- YENİ MİMARİ KONTROLÜ ---
+            // Modelden bu hücrenin güncel verisini alıyoruz
+            Node modelNode = BoardController.Instance.Model.GetNode(node.X, node.Y);
+
+            // EĞER DİSKO TOPUNUN VURDUĞU HÜCREDE BİR BOOSTER VARSA:
+            if (modelNode != null && modelNode.Booster != BoosterType.None)
+            {
+                // Anında Controller'a haber ver, yeni patlama zincirini tam görselin patladığı an başlat!
+                BoardController.Instance.TriggerChainedBooster(node.X, node.Y);
+            }
+            else
+            {
+                // Normal blok ise efektle birlikte patlat
+                VFXManager.Instance.PlayVFX(blockDestroyVFXType, node.transform.position);
+                node.gameObject.SetActive(false);
+            }
         }
 
         // 5. TEMİZLİK AŞAMASI

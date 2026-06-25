@@ -1,0 +1,128 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: ed95754c20e0d2e43b3eee9cf3501c80, type: 3}
+  m_Name: 5. Level
+  m_EditorClassIdentifier: 
+  nextLevel: {fileID: 11400000, guid: 80253237e1adb0b4aa26c8b0452ace3e, type: 2}
+  boardWidth: 5
+  boardHeight: 6
+  useManualSetup: 1
+  startingBoard:
+  - columns:
+    - colorBlock: 0
+      obstacle: 0
+      booster: 0
+    - colorBlock: 0
+      obstacle: 0
+      booster: 0
+    - colorBlock: 0
+      obstacle: 0
+      booster: 0
+    - colorBlock: 0
+      obstacle: 0
+      booster: 0
+    - colorBlock: 0
+      obstacle: 0
+      booster: 0
+  - columns:
+    - colorBlock: 0
+      obstacle: 0
+      booster: 0
+    - colorBlock: 0
+      obstacle: 0
+      booster: 0
+    - colorBlock: 0
+      obstacle: 0
+      booster: 0
+    - colorBlock: 0
+      obstacle: 0
+      booster: 0
+    - colorBlock: 0
+      obstacle: 0
+      booster: 0
+  - columns:
+    - colorBlock: 0
+      obstacle: 0
+      booster: 0
+    - colorBlock: 0
+      obstacle: 0
+      booster: 0
+    - colorBlock: 0
+      obstacle: 0
+      booster: 0
+    - colorBlock: 0
+      obstacle: 0
+      booster: 0
+    - colorBlock: 0
+      obstacle: 0
+      booster: 0
+  - columns:
+    - colorBlock: 0
+      obstacle: 0
+      booster: 0
+    - colorBlock: 0
+      obstacle: 0
+      booster: 0
+    - colorBlock: 0
+      obstacle: 0
+      booster: 0
+    - colorBlock: 0
+      obstacle: 0
+      booster: 0
+    - colorBlock: 0
+      obstacle: 0
+      booster: 0
+  - columns:
+    - colorBlock: 0
+      obstacle: 0
+      booster: 0
+    - colorBlock: 0
+      obstacle: 0
+      booster: 0
+    - colorBlock: 0
+      obstacle: 0
+      booster: 0
+    - colorBlock: 0
+      obstacle: 0
+      booster: 0
+    - colorBlock: 0
+      obstacle: 0
+      booster: 0
+  - columns:
+    - colorBlock: 0
+      obstacle: 0
+      booster: 0
+    - colorBlock: 0
+      obstacle: 0
+      booster: 0
+    - colorBlock: 0
+      obstacle: 0
+      booster: 0
+    - colorBlock: 0
+      obstacle: 0
+      booster: 0
+    - colorBlock: 0
+      obstacle: 0
+      booster: 0
+  totalMoves: 10
+  levelGoals:
+  - rid: 4486749039363358785
+  availableColors: 010000000200000003000000
+  references:
+    version: 2
+    RefIds:
+    - rid: 4486749039363358785
+      type: {class: ColorGoal, ns: , asm: Assembly-CSharp}
+      data:
+        goalIcon: {fileID: 10911, guid: 0000000000000000f000000000000000, type: 0}
+        targetColor: 1
+        targetAmount: 20

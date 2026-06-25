@@ -18,10 +18,6 @@ public class RocketAnimator : BoosterAnimatorBase
 
     private IEnumerator RocketSequence(NodeView sourceNode, List<NodeView> affectedNodes, Action onComplete)
     {
-        bool isPumpFinished = false;
-        sourceNode.PlayPumpAnimation(() => { isPumpFinished = true; });
-        yield return new WaitUntil(() => isPumpFinished);
-
         Vector3 centerPos = sourceNode.transform.position;
         VFXManager.Instance.PlayVFX(rocketVFXType, centerPos);
         sourceNode.gameObject.SetActive(false);
@@ -44,10 +40,21 @@ public class RocketAnimator : BoosterAnimatorBase
             // 2. Bu blok roketin çaprazından veya başka bir patlamadan dolayı zaten patladıysa, tekrar VFX oynatıp çorba yapma.
             if (!node.gameObject.activeInHierarchy) continue;
 
-            BoardView.Instance.ApplyKnockback(new List<NodeView> { node });
+            Node modelNode = BoardController.Instance.Model.GetNode(node.X, node.Y);
 
-            VFXManager.Instance.PlayVFX(blockDestroyVFXType, node.transform.position);
-            node.gameObject.SetActive(false);
+            // EĞER ROKETİN ULAŞTIĞI HÜCREDE BİR BOOSTER VARSA:
+            if (modelNode != null && modelNode.Booster != BoosterType.None)
+            {
+                // Anında Controller'a haber ver, yeni patlama zincirini tam görselin oraya ulaştığı an başlat!
+                BoardController.Instance.TriggerChainedBooster(node.X, node.Y);
+            }
+            else
+            {
+                // Değilse normal blok gibi patlat
+                BoardView.Instance.ApplyKnockback(new List<NodeView> { node });
+                VFXManager.Instance.PlayVFX(blockDestroyVFXType, node.transform.position);
+                node.gameObject.SetActive(false);
+            }
 
             yield return new WaitForSeconds(delayBetweenBlocks);
         }

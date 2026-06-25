@@ -10,27 +10,84 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: ed95754c20e0d2e43b3eee9cf3501c80, type: 3}
-  m_Name: 2. Level
+  m_Name: 4. Level
   m_EditorClassIdentifier: 
-  nextLevel: {fileID: 11400000, guid: dbcddbb52aadf0342b2b5986cc456001, type: 2}
-  boardWidth: 4
-  boardHeight: 4
+  nextLevel: {fileID: 11400000, guid: 0584b1e34224c114bb6cd58d01bd7cb6, type: 2}
+  boardWidth: 5
+  boardHeight: 6
   useManualSetup: 1
   startingBoard:
   - columns:
-    - colorBlock: 0
-      obstacle: 1
+    - colorBlock: 2
+      obstacle: 0
+      booster: 0
+    - colorBlock: 1
+      obstacle: 0
       booster: 0
     - colorBlock: 3
       obstacle: 0
       booster: 0
-    - colorBlock: 0
-      obstacle: 1
+    - colorBlock: 1
+      obstacle: 0
       booster: 0
     - colorBlock: 3
       obstacle: 0
       booster: 0
   - columns:
+    - colorBlock: 0
+      obstacle: 1
+      booster: 0
+    - colorBlock: 0
+      obstacle: 0
+      booster: 1
+    - colorBlock: 0
+      obstacle: 1
+      booster: 0
+    - colorBlock: 0
+      obstacle: 0
+      booster: 2
+    - colorBlock: 0
+      obstacle: 1
+      booster: 0
+  - columns:
+    - colorBlock: 3
+      obstacle: 0
+      booster: 0
+    - colorBlock: 0
+      obstacle: 1
+      booster: 0
+    - colorBlock: 1
+      obstacle: 0
+      booster: 0
+    - colorBlock: 2
+      obstacle: 0
+      booster: 0
+    - colorBlock: 3
+      obstacle: 0
+      booster: 0
+  - columns:
+    - colorBlock: 2
+      obstacle: 0
+      booster: 0
+    - colorBlock: 0
+      obstacle: 1
+      booster: 0
+    - colorBlock: 2
+      obstacle: 0
+      booster: 0
+    - colorBlock: 1
+      obstacle: 0
+      booster: 0
+    - colorBlock: 2
+      obstacle: 0
+      booster: 0
+  - columns:
+    - colorBlock: 3
+      obstacle: 0
+      booster: 0
+    - colorBlock: 0
+      obstacle: 1
+      booster: 0
     - colorBlock: 3
       obstacle: 0
       booster: 0
@@ -40,13 +97,13 @@ MonoBehaviour:
     - colorBlock: 1
       obstacle: 0
       booster: 0
+  - columns:
     - colorBlock: 0
       obstacle: 1
       booster: 0
-  - columns:
-    - colorBlock: 3
+    - colorBlock: 0
       obstacle: 0
-      booster: 0
+      booster: 2
     - colorBlock: 2
       obstacle: 0
       booster: 0
@@ -54,31 +111,18 @@ MonoBehaviour:
       obstacle: 0
       booster: 0
     - colorBlock: 1
-      obstacle: 0
-      booster: 0
-  - columns:
-    - colorBlock: 1
-      obstacle: 0
-      booster: 0
-    - colorBlock: 0
-      obstacle: 1
-      booster: 0
-    - colorBlock: 3
-      obstacle: 0
-      booster: 0
-    - colorBlock: 3
       obstacle: 0
       booster: 0
   totalMoves: 10
   levelGoals:
-  - rid: 4486749085250879550
+  - rid: 4486749085250879552
   availableColors: 010000000200000003000000
   references:
     version: 2
     RefIds:
-    - rid: 4486749085250879550
+    - rid: 4486749085250879552
       type: {class: ObstacleGoal, ns: , asm: Assembly-CSharp}
       data:
         goalIcon: {fileID: 21300088, guid: 7ab74e659e1f0a34d9cfec21c478fc12, type: 3}
         targetObstacle: 1
-        targetAmount: 4
+        targetAmount: 7

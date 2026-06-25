@@ -84,6 +84,11 @@ public class BoardController : MonoBehaviour
             if (Physics.Raycast(ray, out RaycastHit hit))
             {
                 NodeView clickedNode = hit.collider.GetComponent<NodeView>();
+
+                // 1. Önce Model'den bu koordinattaki asıl veriyi çekiyoruz (Mantık Katmanı)
+                Node modelNode = Model.GetNode(clickedNode.X, clickedNode.Y);
+
+                if (modelNode == null) return;
                 
                 if (clickedNode != null)
                 {
@@ -94,17 +99,25 @@ public class BoardController : MonoBehaviour
                         boardView.ResetAnimationCounter();
                         
                         // Orkestra kilitlendi
+                        Debug.Log($"{clickedNode} blasted lock state");
                         boardView.LockState(); 
 
-                        // 1. Önce tıklanan bloku şişir (Pump)
-                        clickedNode.PlayPumpAnimation(() =>
+                        if (modelNode.Booster != BoosterType.None) // 2. EĞER TIKLANAN ŞEY BİR BOOSTER İSE:
                         {
-                            // 2. Şişme bitince patlamayı tetikle (Knockback'ler bu satırda başlayacak)
+                            // Şişme animasyonu BEKLEMEDEN anında patlat!
                             Model.CheckAndMatch(clickedNode.X, clickedNode.Y);
-                            
-                            // 3. Yerçekimini hemen çalıştırma! Geri tepmelerin görünmesi için ufak bir es ver
                             StartCoroutine(GravityDelayRoutine());
-                        });
+                        }
+                        else // 3. EĞER TIKLANAN ŞEY NORMAL BİR BLOK İSE (Boş veya Kutu değilse):
+                        {
+                            // Görsel işi View katmanına (BoardView) devrediyoruz (Tam MVC uyumu)
+                            boardView.PlayBlockClickFeedback(clickedNode, () =>
+                            {
+                                // View "Şişme bitti" dediğinde mantığı çalıştır
+                                Model.CheckAndMatch(clickedNode.X, clickedNode.Y);
+                                StartCoroutine(GravityDelayRoutine());
+                            });
+                        }
                     }
                 }
             }
@@ -124,6 +137,15 @@ public class BoardController : MonoBehaviour
         Model.FillEmptySpaces();
         
         // Orkestra kilidini aç (Knockback'ler veya düşmeler sürüyorsa View kendi içindeki sayaçla beklemeye devam eder)
+        
+        Debug.Log("Blast lock release");
         boardView.UnlockState(); 
+    }
+
+    // Görsel efekt oraya ulaştığında Modeli tetiklemek için köprü
+    public void TriggerChainedBooster(int x, int y)
+    {
+        // CheckAndMatch yerine artık bizim özel zincirleme metodumuzu çağırıyoruz
+        Model.DetonateChainedBooster(x, y); 
     }
 }

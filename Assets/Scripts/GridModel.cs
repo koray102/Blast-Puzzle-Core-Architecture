@@ -117,6 +117,8 @@ public class GridModel
         // KURAL 2: Eğer tıklanan hücrede BOOSTER varsa, roket ateşlenir!
         if (startNode.Booster != BoosterType.None)
         {
+            if (startNode.IsMatched) return false; 
+            
             ActivateBooster(startNode);
             return true;
         }
@@ -373,122 +375,111 @@ public class GridModel
 
     private void ActivateBooster(Node startBooster)
     {
-        // 1. ZİNCİRLEME YÖNETİMİ İÇİN LİSTELER
-        Queue<Node> boostersToTrigger = new Queue<Node>();
-        List<Node> allNodesToClear = new List<Node>(); // En son Model'den silinecek tüm objeler
+        List<Node> allNodesToClear = new List<Node>();
         List<Node> bubblesToPop = new List<Node>();
+        List<Node> specificDestroyedNodes = new List<Node>(); 
 
-        boostersToTrigger.Enqueue(startBooster);
+        allNodesToClear.Add(startBooster);
         startBooster.IsMatched = true;
 
-        while (boostersToTrigger.Count > 0)
+        List<Node> targetNodes = new List<Node>();
+
+        // --- HEDEF BELİRLEME MANTIĞI AYNI KALIYOR ---
+        if (startBooster.Booster == BoosterType.RocketHorizontal)
         {
-            Node currentBooster = boostersToTrigger.Dequeue();
-            
-            // Bu booster'ın kendisini de oyun sonu temizliği için listeye al
-            allNodesToClear.Add(currentBooster);
-
-            // SADECE ŞU ANKİ BOOSTER'IN patlatacağı hedefler (View'a gidecek liste)
-            List<Node> targetNodes = new List<Node>();
-            List<Node> specificDestroyedNodes = new List<Node>(); 
-
-            // --- HEDEF BELİRLEME MANTIĞI (Aynen Kalıyor) ---
-            if (currentBooster.Booster == BoosterType.RocketHorizontal)
+            for (int x = 0; x < Width; x++) targetNodes.Add(GetNode(x, startBooster.Y));
+        }
+        else if (startBooster.Booster == BoosterType.RocketVertical)
+        {
+            for (int y = 0; y < Height; y++) targetNodes.Add(GetNode(startBooster.X, y));
+        }
+        else if (startBooster.Booster == BoosterType.Bomb) 
+        {
+            for (int x = startBooster.X - 1; x <= startBooster.X + 1; x++)
             {
-                for (int x = 0; x < Width; x++) targetNodes.Add(GetNode(x, currentBooster.Y));
-            }
-            else if (currentBooster.Booster == BoosterType.RocketVertical)
-            {
-                for (int y = 0; y < Height; y++) targetNodes.Add(GetNode(currentBooster.X, y));
-            }
-            else if (currentBooster.Booster == BoosterType.Bomb) 
-            {
-                for (int x = currentBooster.X - 1; x <= currentBooster.X + 1; x++)
+                for (int y = startBooster.Y - 1; y <= startBooster.Y + 1; y++)
                 {
-                    for (int y = currentBooster.Y - 1; y <= currentBooster.Y + 1; y++)
+                    Node targetNode = GetNode(x, y);
+                    if (targetNode != null) targetNodes.Add(targetNode);
+                }
+            }
+        }
+        else if (startBooster.Booster == BoosterType.DiscoBall)
+        {
+            BlockType targetColor = GetMostAbundantColor();
+            for (int x = 0; x < Width; x++)
+            {
+                for (int y = 0; y < Height; y++)
+                {
+                    Node targetNode = GetNode(x, y);
+                    if (targetNode != null && targetNode.ColorBlock == targetColor && !targetNode.IsMatched) 
                     {
-                        Node targetNode = GetNode(x, y);
-                        if (targetNode != null) targetNodes.Add(targetNode);
+                        targetNodes.Add(targetNode);
                     }
                 }
             }
-            else if (currentBooster.Booster == BoosterType.DiscoBall)
-            {
-                BlockType targetColor = GetMostAbundantColor();
-                for (int x = 0; x < Width; x++)
-                {
-                    for (int y = 0; y < Height; y++)
-                    {
-                        Node targetNode = GetNode(x, y);
-                        // KRİTİK DÜZELTME: Sadece hedef renkteki ve henüz EŞLEŞMEMİŞ blokları listeye al
-                        if (targetNode != null && targetNode.ColorBlock == targetColor && !targetNode.IsMatched) 
-                        {
-                            targetNodes.Add(targetNode);
-                        }
-                    }
-                }
-            }
-
-            // --- HEDEFLERİ İNCELE VE ZİNCİRLEMEYİ KUR ---
-            foreach (Node target in targetNodes)
-            {
-                if (target == null || target.IsMatched) continue;
-                if (target.IsEmpty()) continue;
-
-                target.IsMatched = true;
-
-                if (target.Obstacle == ObstacleType.Bubble)
-                {
-                    bubblesToPop.Add(target); 
-                }
-                else if (target.Booster != BoosterType.None)
-                {
-                    // ZİNCİRLEME REAKSİYON: Başka bir booster tetiklendi!
-                    boostersToTrigger.Enqueue(target);
-                    // Onu da bu patlamanın kurbanı olarak görsel listeye ekle
-                    specificDestroyedNodes.Add(target); 
-                }
-                else
-                {
-                    specificDestroyedNodes.Add(target); 
-                    allNodesToClear.Add(target); // Temizlik listesine ekle
-                }
-            }
-
-            // ÇOK KRİTİK DEĞİŞİKLİK: 
-            // Her booster kuyruktan çıktığında KENDİ EVENTİNİ fırlatır!
-            // Böylece View, hepsi için ayrı ayrı animatör çalıştırır ve hepsini KORUMA KALKANINA alır.
-            OnBoosterDetonated?.Invoke(currentBooster, specificDestroyedNodes);
         }
 
-        // 2. TÜM ZİNCİRLEME REAKSİYON BİTTİKTEN SONRA VERİLERİ (Modeli) TEMİZLE
+        // --- HEDEFLERİ İNCELE ---
+        foreach (Node target in targetNodes)
+        {
+            if (target == null || target.IsMatched) continue;
+            if (target.IsEmpty()) continue;
+
+            if (target.Obstacle == ObstacleType.Bubble)
+            {
+                bubblesToPop.Add(target); 
+                target.IsMatched = true;
+            }
+            else if (target.Booster != BoosterType.None)
+            {
+                target.IsMatched = true;
+                specificDestroyedNodes.Add(target); 
+            }
+            else
+            {
+                target.IsMatched = true;
+                specificDestroyedNodes.Add(target); 
+                allNodesToClear.Add(target); 
+            }
+        }
+
+        OnBoosterDetonated?.Invoke(startBooster, specificDestroyedNodes);
+
+        // 2. TEMİZLİK (Aynen Kalıyor)
         if (allNodesToClear.Count > 0)
         {
             foreach (Node node in allNodesToClear)
             {
                 node.ColorBlock = BlockType.None;
                 node.Booster = BoosterType.None; 
-                
-                if (node.Obstacle == ObstacleType.Box) 
-                {
-                    node.Obstacle = ObstacleType.None;
-                }
+                if (node.Obstacle == ObstacleType.Box) node.Obstacle = ObstacleType.None;
                 node.IsMatched = false;
             }
         }
 
-        // Balonları güncelle
         if (bubblesToPop.Count > 0)
         {
             foreach (Node node in bubblesToPop)
             {
-                if (node.Obstacle == ObstacleType.Bubble) 
-                {
-                    node.Obstacle = ObstacleType.None;
-                }
+                if (node.Obstacle == ObstacleType.Bubble) node.Obstacle = ObstacleType.None;
                 node.IsMatched = false;
             }
             OnNodesUpdated?.Invoke(bubblesToPop);
+        }
+    }
+
+
+    // Zincirleme reaksiyonlarda View'dan gelen "Ben oraya ulaştım, patlat" emri.
+    public void DetonateChainedBooster(int x, int y)
+    {
+        Node node = GetNode(x, y);
+        
+        // Zincirleme reaksiyonda hedefin IsMatched değeri önceden true yapılmış olabilir.
+        // O yüzden sadece hala bir booster ise (önceden patlayıp temizlenmemişse) zorla patlatıyoruz!
+        if (node != null && node.Booster != BoosterType.None)
+        {
+            ActivateBooster(node);
         }
     }
 

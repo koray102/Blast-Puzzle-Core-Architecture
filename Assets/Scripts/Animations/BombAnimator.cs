@@ -50,7 +50,7 @@ public class BombAnimator : BoosterAnimatorBase
         // 3. TOPLU YIKIM: Etkilenen tüm blokları AYNI ANDA, bekleme (delay) olmadan patlat
         foreach (var node in affectedNodes)
         {
-            if (node == sourceNode) continue; // Kendini tekrar patlatma
+            if (node == sourceNode) continue;
 
             // 1. Bu blok başka bir animatörün (örneğin tetiklenen bir bombanın) ana objesiyse, ona DOKUNMA! O kendi animatörüyle patlayacak.
             if (BoardView.Instance.ActiveBoosterSources.Contains(node)) continue;
@@ -58,11 +58,22 @@ public class BombAnimator : BoosterAnimatorBase
             // 2. Bu blok roketin çaprazından veya başka bir patlamadan dolayı zaten patladıysa, tekrar VFX oynatıp çorba yapma.
             if (!node.gameObject.activeInHierarchy) continue;
 
-            // Kutunun/Bloğun olduğu yerde parçalanma efektini oynat
-            VFXManager.Instance.PlayVFX(blockDestroyVFXType, node.transform.position);
+            // --- YENİ MİMARİ KONTROLÜ ---
+            // Modelden bu hücrenin güncel verisini alıyoruz
+            Node modelNode = BoardController.Instance.Model.GetNode(node.X, node.Y);
 
-            // Bloğu anında gizle
-            node.gameObject.SetActive(false);
+            // EĞER BOMBANIN PATLATTIĞI HÜCREDE BİR BOOSTER VARSA:
+            if (modelNode != null && modelNode.Booster != BoosterType.None)
+            {
+                // Anında Controller'a haber ver, yeni patlama zincirini tam görselin patladığı an başlat!
+                BoardController.Instance.TriggerChainedBooster(node.X, node.Y);
+            }
+            else
+            {
+                // Normal blok veya kutu ise parçalanma efektini oynat ve gizle
+                VFXManager.Instance.PlayVFX(blockDestroyVFXType, node.transform.position);
+                node.gameObject.SetActive(false);
+            }
         }
 
         yield return new WaitForSeconds(delayAfterComplete);

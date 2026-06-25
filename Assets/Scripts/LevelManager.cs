@@ -96,9 +96,11 @@ public class LevelManager : MonoBehaviour
     
     private void CheckWinLoseCondition()
     {
+        // Eğer oyun zaten bittiyse (Coroutine çalışıyorsa) tekrar tetiklenmesini engelle
+        if (_isLevelEnded) return;
+
         bool allGoalsMet = true;
 
-        // Tüm hedefler tamamlandı mı?
         foreach (var goal in currentLevelData.levelGoals)
         {
             if (!goal.IsMet())
@@ -110,9 +112,29 @@ public class LevelManager : MonoBehaviour
 
         if (allGoalsMet)
         {
-            LevelWon();
+            _isLevelEnded = true; 
+            StartCoroutine(WaitAndEndLevel(true));
         }
         else if (_remainingMoves <= 0)
+        {
+            _isLevelEnded = true;
+            StartCoroutine(WaitAndEndLevel(false));
+        }
+    }
+
+    private System.Collections.IEnumerator WaitAndEndLevel(bool isWin)
+    {
+        // 1. SİHİRLİ BEKLEYİŞ: Tahtadaki tüm animasyonların, düşmelerin ve patlamaların bitmesini bekle
+        yield return new WaitUntil(() => BoardController.Instance.State == GameState.WaitingForInput);
+
+        // 2. OYUN HİSSİYATI (Game Feel): Her şey durduktan sonra küt diye açılmaması için ufak bir es
+        yield return new WaitForSeconds(0.4f);
+
+        if (isWin)
+        {
+            LevelWon();
+        }
+        else
         {
             LevelLost();
         }
@@ -120,18 +142,16 @@ public class LevelManager : MonoBehaviour
 
     private void LevelWon()
     {
-        _isLevelEnded = true;
         BoardController.Instance.SetState(GameState.GameOver);
         Debug.Log("TEBRİKLER! BÖLÜMÜ GEÇTİN!");
-        GameplayUIManager.Instance.ShowWinPanel();
+        GameplayUIManager.Instance.ShowWinPanel(); // Artık doğru zamanda açılacak!
     }
 
     private void LevelLost()
     {
-        _isLevelEnded = true;
         BoardController.Instance.SetState(GameState.GameOver);
         Debug.Log("HAMLEN BİTTİ! KAYBETTİN!");
-        GameplayUIManager.Instance.ShowLosePanel();
+        GameplayUIManager.Instance.ShowLosePanel(); // Artık doğru zamanda açılacak!
     }
 
     public void RetryLevel()

@@ -19,6 +19,10 @@ public class NodeView : MonoBehaviour
     [SerializeField] private GameObject _discoModel;
 
 
+    private Vector3 _basePosition;
+    private bool _isKnockingBack = false;
+
+
     // Draw Call optimizasyonu için PropertyBlock
     private static MaterialPropertyBlock _propBlock;
     private static readonly int ColorProperty = Shader.PropertyToID("_BaseColor");
@@ -108,6 +112,8 @@ public class NodeView : MonoBehaviour
     // Dışarıdan tetiklenecek hareket fonksiyonu
     public void MoveTo(Vector3 targetPos, Action onComplete = null)
     {
+        _isKnockingBack = false; // Düşüş başladığı an knockback hafızasını sıfırla!
+        
         // Eğer zaten hareket halindeyse, eski hareketi kes ama sayacın kilitlenmemesi için
         // eski callback'i çalıştırılmış say!
         if (_moveRoutine != null)
@@ -165,8 +171,18 @@ public class NodeView : MonoBehaviour
     // --- GERİ TEPME (KNOCKBACK) ANİMASYONU ---
     public void PlayKnockback(Vector3 direction, Action onComplete)
     {
-        if (_moveRoutine != null) StopCoroutine(_moveRoutine);
-        SafeExecuteCallback(); // Varsa eski hareketi bitmiş say
+        if (_moveRoutine != null) 
+        {
+            StopCoroutine(_moveRoutine);
+        }
+        SafeExecuteCallback(); 
+
+        // SADECE EĞER ŞU AN BİR KNOCKBACK İÇİNDE DEĞİLSEK GERÇEK POZİSYONU KAYDET!
+        // Böylece havadayken 2. roket çarparsa, orijinal merkezini unutmaz.
+        if (!_isKnockingBack)
+        {
+            _basePosition = transform.position;
+        }
 
         _currentCallback = onComplete;
         _moveRoutine = StartCoroutine(KnockbackRoutine(direction));
@@ -174,28 +190,34 @@ public class NodeView : MonoBehaviour
 
     private IEnumerator KnockbackRoutine(Vector3 direction)
     {
-        Vector3 originalPos = transform.position;
-        Vector3 targetPos = originalPos + (direction * 0.25f); // Yön vektörüne doğru 0.25 birim itil
+        _isKnockingBack = true; // Zıplama başladı
+        
+        // Hedefi anlık pozisyona göre değil, gerçek merkeze (basePosition) göre hesapla
+        Vector3 targetPos = _basePosition + (direction * 0.25f); 
 
-        // Hızlıca geriye sek
+        // Hızlıca geriye sek (Bulunduğu yerden hedefe git ki aniden ışınlanma (snap) olmasın)
         float t = 0;
+        Vector3 startPos = transform.position;
         while (t < 1)
         {
             t += Time.deltaTime * 15f;
-            transform.position = Vector3.Lerp(originalPos, targetPos, t);
+            transform.position = Vector3.Lerp(startPos, targetPos, t);
             yield return null;
         }
 
-        // Yumuşakça geri dön
+        // Yumuşakça GERÇEK MERKEZE geri dön
         t = 0;
         while (t < 1)
         {
             t += Time.deltaTime * 10f;
-            transform.position = Vector3.Lerp(targetPos, originalPos, t);
+            transform.position = Vector3.Lerp(targetPos, _basePosition, t);
             yield return null;
         }
 
-        transform.position = originalPos;
+        // İşi garantiye al ve tam merkeze oturt
+        transform.position = _basePosition;
+        _isKnockingBack = false; // Zıplama bitti
+        
         SafeExecuteCallback();
     }
     
@@ -203,6 +225,8 @@ public class NodeView : MonoBehaviour
     {
         if (_currentCallback != null)
         {
+            Debug.Log($"{gameObject} SafeExecuteCallback");
+
             var temp = _currentCallback;
             _currentCallback = null;
             temp.Invoke();

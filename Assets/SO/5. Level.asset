@@ -13,116 +13,226 @@ MonoBehaviour:
   m_Name: 5. Level
   m_EditorClassIdentifier: 
   nextLevel: {fileID: 11400000, guid: 80253237e1adb0b4aa26c8b0452ace3e, type: 2}
-  boardWidth: 5
-  boardHeight: 6
+  boardWidth: 8
+  boardHeight: 8
   useManualSetup: 1
   startingBoard:
   - columns:
     - colorBlock: 0
+      obstacle: 1
+      booster: 0
+    - colorBlock: 0
+      obstacle: 1
+      booster: 0
+    - colorBlock: 0
+      obstacle: 1
+      booster: 0
+    - colorBlock: 0
+      obstacle: 1
+      booster: 0
+    - colorBlock: 0
+      obstacle: 1
+      booster: 0
+    - colorBlock: 0
+      obstacle: 1
+      booster: 0
+    - colorBlock: 0
+      obstacle: 1
+      booster: 0
+    - colorBlock: 0
+      obstacle: 1
+      booster: 0
+  - columns:
+    - colorBlock: 3
+      obstacle: 0
+      booster: 0
+    - colorBlock: 3
+      obstacle: 0
+      booster: 0
+    - colorBlock: 3
       obstacle: 0
       booster: 0
     - colorBlock: 0
+      obstacle: 1
+      booster: 0
+    - colorBlock: 0
+      obstacle: 1
+      booster: 0
+    - colorBlock: 3
+      obstacle: 0
+      booster: 0
+    - colorBlock: 3
+      obstacle: 0
+      booster: 0
+    - colorBlock: 3
+      obstacle: 0
+      booster: 0
+  - columns:
+    - colorBlock: 3
+      obstacle: 0
+      booster: 0
+    - colorBlock: 3
       obstacle: 0
       booster: 0
     - colorBlock: 0
-      obstacle: 0
+      obstacle: 1
       booster: 0
     - colorBlock: 0
-      obstacle: 0
+      obstacle: 1
       booster: 0
     - colorBlock: 0
+      obstacle: 1
+      booster: 0
+    - colorBlock: 0
+      obstacle: 1
+      booster: 0
+    - colorBlock: 3
+      obstacle: 0
+      booster: 0
+    - colorBlock: 3
       obstacle: 0
       booster: 0
   - columns:
     - colorBlock: 0
+      obstacle: 1
+      booster: 0
+    - colorBlock: 0
+      obstacle: 1
+      booster: 0
+    - colorBlock: 0
+      obstacle: 1
+      booster: 0
+    - colorBlock: 1
+      obstacle: 0
+      booster: 0
+    - colorBlock: 1
       obstacle: 0
       booster: 0
     - colorBlock: 0
-      obstacle: 0
+      obstacle: 1
       booster: 0
     - colorBlock: 0
-      obstacle: 0
+      obstacle: 1
       booster: 0
     - colorBlock: 0
-      obstacle: 0
-      booster: 0
-    - colorBlock: 0
-      obstacle: 0
-      booster: 0
-  - columns:
-    - colorBlock: 0
-      obstacle: 0
-      booster: 0
-    - colorBlock: 0
-      obstacle: 0
-      booster: 0
-    - colorBlock: 0
-      obstacle: 0
-      booster: 0
-    - colorBlock: 0
-      obstacle: 0
-      booster: 0
-    - colorBlock: 0
-      obstacle: 0
+      obstacle: 1
       booster: 0
   - columns:
     - colorBlock: 0
+      obstacle: 1
+      booster: 0
+    - colorBlock: 0
+      obstacle: 1
+      booster: 0
+    - colorBlock: 1
+      obstacle: 0
+      booster: 0
+    - colorBlock: 1
+      obstacle: 0
+      booster: 0
+    - colorBlock: 1
+      obstacle: 0
+      booster: 0
+    - colorBlock: 1
       obstacle: 0
       booster: 0
     - colorBlock: 0
-      obstacle: 0
+      obstacle: 1
       booster: 0
     - colorBlock: 0
-      obstacle: 0
-      booster: 0
-    - colorBlock: 0
-      obstacle: 0
-      booster: 0
-    - colorBlock: 0
-      obstacle: 0
-      booster: 0
-  - columns:
-    - colorBlock: 0
-      obstacle: 0
-      booster: 0
-    - colorBlock: 0
-      obstacle: 0
-      booster: 0
-    - colorBlock: 0
-      obstacle: 0
-      booster: 0
-    - colorBlock: 0
-      obstacle: 0
-      booster: 0
-    - colorBlock: 0
-      obstacle: 0
+      obstacle: 1
       booster: 0
   - columns:
     - colorBlock: 0
+      obstacle: 1
+      booster: 0
+    - colorBlock: 3
+      obstacle: 0
+      booster: 0
+    - colorBlock: 3
+      obstacle: 0
+      booster: 0
+    - colorBlock: 2
+      obstacle: 0
+      booster: 0
+    - colorBlock: 4
+      obstacle: 0
+      booster: 0
+    - colorBlock: 4
+      obstacle: 0
+      booster: 0
+    - colorBlock: 2
       obstacle: 0
       booster: 0
     - colorBlock: 0
+      obstacle: 1
+      booster: 0
+  - columns:
+    - colorBlock: 3
       obstacle: 0
       booster: 0
-    - colorBlock: 0
+    - colorBlock: 3
       obstacle: 0
       booster: 0
-    - colorBlock: 0
+    - colorBlock: 2
       obstacle: 0
       booster: 0
-    - colorBlock: 0
+    - colorBlock: 2
+      obstacle: 0
+      booster: 0
+    - colorBlock: 4
+      obstacle: 0
+      booster: 0
+    - colorBlock: 4
+      obstacle: 0
+      booster: 0
+    - colorBlock: 2
+      obstacle: 0
+      booster: 0
+    - colorBlock: 2
+      obstacle: 0
+      booster: 0
+  - columns:
+    - colorBlock: 1
+      obstacle: 0
+      booster: 0
+    - colorBlock: 3
+      obstacle: 0
+      booster: 0
+    - colorBlock: 3
+      obstacle: 0
+      booster: 0
+    - colorBlock: 2
+      obstacle: 0
+      booster: 0
+    - colorBlock: 4
+      obstacle: 0
+      booster: 0
+    - colorBlock: 4
+      obstacle: 0
+      booster: 0
+    - colorBlock: 1
+      obstacle: 0
+      booster: 0
+    - colorBlock: 1
       obstacle: 0
       booster: 0
   totalMoves: 10
   levelGoals:
-  - rid: 4486749039363358785
-  availableColors: 010000000200000003000000
+  - rid: 4486749085250879553
+  - rid: 4486749085250879554
+  availableColors: 01000000020000000300000004000000
   references:
     version: 2
     RefIds:
-    - rid: 4486749039363358785
-      type: {class: ColorGoal, ns: , asm: Assembly-CSharp}
+    - rid: 4486749085250879553
+      type: {class: ObstacleGoal, ns: , asm: Assembly-CSharp}
       data:
-        goalIcon: {fileID: 10911, guid: 0000000000000000f000000000000000, type: 0}
-        targetColor: 1
-        targetAmount: 20
+        goalIcon: {fileID: 21300088, guid: 7ab74e659e1f0a34d9cfec21c478fc12, type: 3}
+        targetObstacle: 1
+        targetAmount: 26
+    - rid: 4486749085250879554
+      type: {class: TotalBlockGoal, ns: , asm: Assembly-CSharp}
+      data:
+        goalIcon: {fileID: 21300062, guid: 7ab74e659e1f0a34d9cfec21c478fc12, type: 3}
+        targetAmount: 40

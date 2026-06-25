@@ -25,6 +25,6 @@ public class Node
 
     public bool CanBlockFallInto()
     {
-        return Obstacle != ObstacleType.Box && ColorBlock == BlockType.None && Booster == BoosterType.None;
+        return IsEmpty();
     }
 }

@@ -34,16 +34,6 @@ MonoBehaviour:
     - colorBlock: 1
       obstacle: 0
       booster: 0
-    - colorBlock: 1
-      obstacle: 0
-      booster: 0
-    - colorBlock: 1
-      obstacle: 0
-      booster: 0
-    - colorBlock: 3
-      obstacle: 0
-      booster: 0
-  - columns:
     - colorBlock: 2
       obstacle: 0
       booster: 0
@@ -53,14 +43,24 @@ MonoBehaviour:
     - colorBlock: 3
       obstacle: 0
       booster: 0
+  - columns:
+    - colorBlock: 1
+      obstacle: 0
+      booster: 0
+    - colorBlock: 1
+      obstacle: 0
+      booster: 0
+    - colorBlock: 3
+      obstacle: 0
+      booster: 0
     - colorBlock: 3
       obstacle: 0
       booster: 0
   - columns:
-    - colorBlock: 1
+    - colorBlock: 4
       obstacle: 0
       booster: 0
-    - colorBlock: 1
+    - colorBlock: 4
       obstacle: 0
       booster: 0
     - colorBlock: 0
@@ -70,7 +70,7 @@ MonoBehaviour:
       obstacle: 1
       booster: 0
   - columns:
-    - colorBlock: 1
+    - colorBlock: 4
       obstacle: 0
       booster: 0
     - colorBlock: 1
@@ -85,7 +85,7 @@ MonoBehaviour:
   totalMoves: 10
   levelGoals:
   - rid: 4486749085250879551
-  availableColors: 010000000200000003000000
+  availableColors: 01000000020000000300000004000000
   references:
     version: 2
     RefIds:

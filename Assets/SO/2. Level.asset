@@ -22,7 +22,7 @@ MonoBehaviour:
       obstacle: 1
       booster: 0
     - colorBlock: 3
-      obstacle: 0
+      obstacle: 2
       booster: 0
     - colorBlock: 0
       obstacle: 1
@@ -64,7 +64,7 @@ MonoBehaviour:
       obstacle: 1
       booster: 0
     - colorBlock: 3
-      obstacle: 0
+      obstacle: 2
       booster: 0
     - colorBlock: 3
       obstacle: 0

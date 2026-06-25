@@ -59,10 +59,10 @@ MonoBehaviour:
     - colorBlock: 1
       obstacle: 0
       booster: 0
-    - colorBlock: 2
+    - colorBlock: 3
       obstacle: 0
       booster: 0
-    - colorBlock: 3
+    - colorBlock: 4
       obstacle: 0
       booster: 0
   - columns:
@@ -75,8 +75,8 @@ MonoBehaviour:
     - colorBlock: 2
       obstacle: 0
       booster: 0
-    - colorBlock: 1
-      obstacle: 0
+    - colorBlock: 0
+      obstacle: 1
       booster: 0
     - colorBlock: 2
       obstacle: 0
@@ -94,7 +94,7 @@ MonoBehaviour:
     - colorBlock: 2
       obstacle: 0
       booster: 0
-    - colorBlock: 1
+    - colorBlock: 2
       obstacle: 0
       booster: 0
   - columns:
@@ -107,16 +107,16 @@ MonoBehaviour:
     - colorBlock: 2
       obstacle: 0
       booster: 0
-    - colorBlock: 1
+    - colorBlock: 4
       obstacle: 0
       booster: 0
-    - colorBlock: 1
+    - colorBlock: 4
       obstacle: 0
       booster: 0
   totalMoves: 10
   levelGoals:
   - rid: 4486749085250879552
-  availableColors: 010000000200000003000000
+  availableColors: 01000000020000000300000004000000
   references:
     version: 2
     RefIds:
@@ -125,4 +125,4 @@ MonoBehaviour:
       data:
         goalIcon: {fileID: 21300088, guid: 7ab74e659e1f0a34d9cfec21c478fc12, type: 3}
         targetObstacle: 1
-        targetAmount: 7
+        targetAmount: 8

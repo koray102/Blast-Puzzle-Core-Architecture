@@ -70,6 +70,7 @@ public class LevelDesignerWindow : EditorWindow
         // Tüm içeriği kaydırılabilir yap
         _mainScrollPos = EditorGUILayout.BeginScrollView(_mainScrollPos);
 
+        // 1. ÜSTTEKİ NAVİGASYON BAR
         DrawNavigationBar();
 
         if (_allLevels.Count == 0)
@@ -102,6 +103,13 @@ public class LevelDesignerWindow : EditorWindow
 
         serializedObject.ApplyModifiedProperties();
         
+        // --- YENİ EKLENEN KISIM ---
+        EditorGUILayout.Space(20); // Alet çantasından sonra biraz boşluk bırak
+        
+        // 2. ALTTAKİ NAVİGASYON BAR
+        DrawNavigationBar(); 
+        // -------------------------
+
         EditorGUILayout.EndScrollView();
     }
 
@@ -259,6 +267,18 @@ public class LevelDesignerWindow : EditorWindow
             return;
         }
 
+        DrawBoardStats(startingBoardProp, data);
+        // --------------------------------------------------------------------------
+
+        EditorGUILayout.LabelField("Tahta Görünümü (Tıklayarak Boyayın)", EditorStyles.miniBoldLabel);
+
+        // --- GÖRSEL MATRİS (GRID) ÇİZİMİ (SCROLL İLE) ---
+        if (startingBoardProp == null || startingBoardProp.arraySize != data.boardHeight)
+        {
+            EditorGUILayout.HelpBox("Grid dizilimi hazırlanıyor... Değişiklikleri görmek için useManualSetup kutusunu kapatıp açın.", MessageType.Info);
+            return;
+        }
+
         // Devasa levelların sığması için Grid'i kendi özel ScrollView'unun içine alıyoruz
         _gridScrollPos = EditorGUILayout.BeginScrollView(_gridScrollPos, "box", GUILayout.Height(350));
 
@@ -363,5 +383,70 @@ public class LevelDesignerWindow : EditorWindow
                 boosterProp.enumValueIndex = (int)BoosterType.None;
                 break;
         }
+    }
+
+    private void DrawBoardStats(SerializedProperty startingBoardProp, LevelData data)
+    {
+        if (startingBoardProp == null || startingBoardProp.arraySize != data.boardHeight) return;
+
+        Dictionary<string, int> stats = new Dictionary<string, int>();
+
+        // Tüm tahtayı tarayıp neyin nerede olduğunu sayıyoruz
+        for (int y = 0; y < data.boardHeight; y++)
+        {
+            SerializedProperty rowProp = startingBoardProp.GetArrayElementAtIndex(y);
+            SerializedProperty columnsProp = rowProp.FindPropertyRelative("columns");
+
+            if (columnsProp == null || columnsProp.arraySize != data.boardWidth) continue;
+
+            for (int x = 0; x < data.boardWidth; x++)
+            {
+                SerializedProperty cellProp = columnsProp.GetArrayElementAtIndex(x);
+                SerializedProperty colorProp = cellProp.FindPropertyRelative("colorBlock");
+                SerializedProperty obstacleProp = cellProp.FindPropertyRelative("obstacle");
+                SerializedProperty boosterProp = cellProp.FindPropertyRelative("booster");
+
+                BlockType color = (BlockType)colorProp.enumValueIndex;
+                ObstacleType obs = (ObstacleType)obstacleProp.enumValueIndex;
+                BoosterType boost = (BoosterType)boosterProp.enumValueIndex;
+
+                // Öncelik sırası: Engel > Booster > Renkli Blok
+                if (obs != ObstacleType.None) 
+                {
+                    string key = obs.ToString();
+                    if (!stats.ContainsKey(key)) stats[key] = 0;
+                    stats[key]++;
+                }
+                else if (boost != BoosterType.None)
+                {
+                    string key = boost.ToString();
+                    if (!stats.ContainsKey(key)) stats[key] = 0;
+                    stats[key]++;
+                }
+                else if (color != BlockType.None)
+                {
+                    string key = color.ToString();
+                    if (!stats.ContainsKey(key)) stats[key] = 0;
+                    stats[key]++;
+                }
+            }
+        }
+
+        // --- UI ÇİZİMİ ---
+        EditorGUILayout.BeginVertical("helpbox");
+        EditorGUILayout.LabelField("📊 Tahta İstatistikleri", EditorStyles.boldLabel);
+
+        if (stats.Count > 0)
+        {
+            // Sözlükteki verileri yan yana güzel bir formata çeviriyoruz (Örn: Red: 5 | Box: 2)
+            string statsText = string.Join("   |   ", stats.Select(kv => $"{kv.Key}: {kv.Value}"));
+            EditorGUILayout.LabelField(statsText, EditorStyles.wordWrappedLabel);
+        }
+        else
+        {
+            EditorGUILayout.LabelField("Tahta şu an tamamen boş.");
+        }
+        EditorGUILayout.EndVertical();
+        EditorGUILayout.Space(10);
     }
 }

@@ -1,12 +1,21 @@
+using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.UI;
 using UnityEngine.SceneManagement;
 
 public class MainMenuManager : MonoBehaviour
 {
-    [Header("Panels")]
-    [SerializeField] private GameObject mainPanel;
-    [SerializeField] private GameObject settingsPanel;
+    [System.Serializable]
+    public struct MenuPanelData
+    {
+        public MainMenuPanelType type;
+        public GameObject panelObject;
+    }
+
+    [Header("Panel Configurations")]
+    [Tooltip("Tüm menü panellerini buraya ekleyin. Aktif olan dışındakiler otomatik kapanır.")]
+    [SerializeField] private List<MenuPanelData> allPanels;
+    private Dictionary<MainMenuPanelType, GameObject> _panelDictionary;
 
     [Header("Buttons")]
     [SerializeField] private Button playButton;
@@ -18,17 +27,43 @@ public class MainMenuManager : MonoBehaviour
     [Tooltip("Oyuna başla tuşuna basıldığında yüklenecek ilk bölüm (Level 1)")]
     [SerializeField] private LevelData firstLevel; 
 
+    private void Awake()
+    {
+        InitPanelDictionary();
+    }
+
     private void Start()
     {
-        // Menü ilk açıldığında doğru panelleri göster
-        mainPanel.SetActive(true);
-        settingsPanel.SetActive(false);
-
         // Dinleyicileri (Eventleri) koda bağlıyoruz
         playButton.onClick.AddListener(PlayGame);
         settingsButton.onClick.AddListener(OpenSettings);
         closeSettingsButton.onClick.AddListener(CloseSettings);
         quitButton.onClick.AddListener(QuitGame);
+
+        // Menü ilk açıldığında Ana Ekranı göster, gerisini kapat
+        SwitchToPanel(MainMenuPanelType.MainScreen);
+    }
+
+    // Sözlüğü (Dictionary) başlatır
+    private void InitPanelDictionary()
+    {
+        _panelDictionary = new Dictionary<MainMenuPanelType, GameObject>();
+        foreach (var panel in allPanels)
+        {
+            if (panel.panelObject != null && !_panelDictionary.ContainsKey(panel.type))
+            {
+                _panelDictionary.Add(panel.type, panel.panelObject);
+            }
+        }
+    }
+
+    // --- SİHİRLİ MERKEZİ METOT ---
+    public void SwitchToPanel(MainMenuPanelType targetPanelType)
+    {
+        foreach (var pair in _panelDictionary)
+        {
+            pair.Value.SetActive(pair.Key == targetPanelType);
+        }
     }
 
     private void PlayGame()
@@ -39,20 +74,18 @@ public class MainMenuManager : MonoBehaviour
             LevelManager.TargetLevelData = firstLevel;
         }
 
-        // 2. Gameplay sahnesini yüklüyoruz (İsmi senin sahnene göre değiştir)
+        // 2. Gameplay sahnesini yüklüyoruz
         SceneManager.LoadScene("Game Scene"); 
     }
 
     private void OpenSettings()
     {
-        mainPanel.SetActive(false);
-        settingsPanel.SetActive(true);
+        SwitchToPanel(MainMenuPanelType.SettingsScreen);
     }
 
     private void CloseSettings()
     {
-        settingsPanel.SetActive(false);
-        mainPanel.SetActive(true);
+        SwitchToPanel(MainMenuPanelType.MainScreen);
     }
 
     private void QuitGame()

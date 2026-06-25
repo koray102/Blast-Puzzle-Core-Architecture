@@ -41,6 +41,7 @@ public class BombAnimator : BoosterAnimatorBase
         // 2. ANA PATLAMA: Bombanın kendi merkezindeki devasa partikülü oynat
         Vector3 centerPos = sourceNode.transform.position;
         VFXManager.Instance.PlayVFX(bombVFXType, centerPos);
+        // AudioManager.Instance.PlaySFX(bombAudioClip);
         
         // Bombayı sahnede anında gizle
         sourceNode.gameObject.SetActive(false);

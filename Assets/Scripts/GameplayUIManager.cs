@@ -2,30 +2,37 @@ using System.Collections.Generic;
 using UnityEngine;
 using TMPro;
 using UnityEngine.UI;
+using UnityEngine.SceneManagement;
 
 public class GameplayUIManager : MonoBehaviour
 {
     public static GameplayUIManager Instance { get; private set; }
 
+    [System.Serializable]
+    public struct PanelData
+    {
+        public PanelType type;
+        public GameObject panelObject;
+    }
+
+    [Header("Panel Configurations")]
+    [Tooltip("Tüm panelleri buraya ekleyin. Aktif olan dışındakiler otomatik kapanır.")]
+    [SerializeField] private List<PanelData> allPanels;
+    private Dictionary<PanelType, GameObject> _panelDictionary;
+
     [Header("UI References")]
     [SerializeField] private TextMeshProUGUI movesText;
-    [SerializeField] private Transform goalsContainer; // Prefabları dizeceğimiz kutu (HorizontalLayoutGroup olacak)
+    [SerializeField] private Transform goalsContainer; 
     [SerializeField] private GoalUIView goalPrefab;
-
-
-    [Header("Panels")]
-    [SerializeField] private GameObject pauseMenuPanel;
-    [SerializeField] private GameObject winPanel;
-    [SerializeField] private GameObject losePanel;
 
     [Header("Level End Buttons")]
     [SerializeField] private Button nextLevelButton;
     [SerializeField] private Button retryButton;
 
-    [Header("Pause Menu Buttons")]
-    [SerializeField] private Button pauseButton;   // Sağ üstteki duraklatma butonu
-    [SerializeField] private Button resumeButton;  // Menüdeki devam et butonu
-    [SerializeField] private Button quitButton;    // Menüdeki çıkış butonu
+    [Header("Menu Buttons")]
+    [SerializeField] private Button pauseButton;   
+    [SerializeField] private Button resumeButton;  
+    [SerializeField] private Button quitButton;    
 
     private GameState _previousState;
 
@@ -37,44 +44,65 @@ public class GameplayUIManager : MonoBehaviour
             return;
         }
         Instance = this;
-    }
 
+        InitPanelDictionary();
+    }
 
     private void Start()
     {
         nextLevelButton.onClick.AddListener(OnNextLevelClicked);
         retryButton.onClick.AddListener(OnRetryClicked);
-        //pauseButton.onClick.AddListener(OpenPauseMenu);
-        //resumeButton.onClick.AddListener(ClosePauseMenu);
-        //quitButton.onClick.AddListener(QuitGame);
+        pauseButton.onClick.AddListener(OpenPauseMenu);
+        resumeButton.onClick.AddListener(ClosePauseMenu);
+        quitButton.onClick.AddListener(QuitGame);
     }
-    
 
-    // Bu fonksiyonu LevelManager çağıracak (Orkestrasyon)
+    // Sözlüğü (Dictionary) başlatır
+    private void InitPanelDictionary()
+    {
+        _panelDictionary = new Dictionary<PanelType, GameObject>();
+        foreach (var panel in allPanels)
+        {
+            if (panel.panelObject != null && !_panelDictionary.ContainsKey(panel.type))
+            {
+                _panelDictionary.Add(panel.type, panel.panelObject);
+            }
+        }
+    }
+
+    // --- SİHİRLİ MERKEZİ METOT ---
+    // Bu metot çağrıldığında hedeflenen panel açılır, diğer TÜM paneller kapanır.
+    public void SwitchToPanel(PanelType targetPanelType)
+    {
+        foreach (var pair in _panelDictionary)
+        {
+            pair.Value.SetActive(pair.Key == targetPanelType);
+        }
+    }
+
+    // Bölüm başlarken LevelManager tarafından çağrılır
     public void InitializeUI(List<LevelGoal> activeGoals, int startingMoves)
     {
-        winPanel.SetActive(false);
-        losePanel.SetActive(false);
-        // pauseMenuPanel.SetActive(false);
-
         UpdateMoves(startingMoves);
         SpawnGoalViews(activeGoals);
+        
+        // Oyun başlarken sadece HUD ekranını aç
+        SwitchToPanel(PanelType.GameplayHUD);
     }
 
     public void UpdateMoves(int currentMoves)
     {
-        movesText.text = currentMoves.ToString();
+        if (movesText != null)
+            movesText.text = currentMoves.ToString();
     }
 
     private void SpawnGoalViews(List<LevelGoal> activeGoals)
     {
-        // Önceki bölümden kalan eski prefablar varsa temizle
         foreach (Transform child in goalsContainer)
         {
             Destroy(child.gameObject);
         }
 
-        // Yeni bölümün hedefleri için prefablar üret
         foreach (LevelGoal goal in activeGoals)
         {
             GoalUIView newGoalView = Instantiate(goalPrefab, goalsContainer);
@@ -82,23 +110,23 @@ public class GameplayUIManager : MonoBehaviour
         }
     }
 
+    // Oyun sonu ekranları
     public void ShowWinPanel()
     {
-        winPanel.SetActive(true);
+        SwitchToPanel(PanelType.WinWindow);
     }
 
     public void ShowLosePanel()
     {
-        losePanel.SetActive(true);
+        SwitchToPanel(PanelType.LoseWindow);
     }
 
-    // Arayüzdeki "Next Level" butonuna basılınca çalışacak
+    // Arayüz buton fonksiyonları
     public void OnNextLevelClicked()
     {
         LevelManager.Instance.LoadNextLevel();
     }
 
-    // Arayüzdeki "Retry" butonuna basılınca çalışacak
     public void OnRetryClicked()
     {
         LevelManager.Instance.RetryLevel();
@@ -106,40 +134,31 @@ public class GameplayUIManager : MonoBehaviour
 
     private void OpenPauseMenu()
     {
-        // Eğer oyun zaten bitmişse (GameOver) pause menüsünü açmayı engelle
+        // Oyun bittiyse duraklatmayı engelle
         if (BoardController.Instance.State == GameState.GameOver) return;
 
-        // Geri dönebilmek için mevcut durumu kaydet (WaitingForInput veya Processing olabilir)
         _previousState = BoardController.Instance.State;
-        
-        // Oyunu kitle ve zamanı durdur
         BoardController.Instance.SetState(GameState.Paused);
         
-        // Paneli aktif et
-        pauseMenuPanel.SetActive(true);
+        SwitchToPanel(PanelType.PauseMenu);
     }
 
     private void ClosePauseMenu()
     {
-        // Paneli kapat
-        pauseMenuPanel.SetActive(false);
-        
-        // Oyunu duraklatmadan önceki durumuna geri döndür (Zaman da otomatik 1'e dönecektir)
+        SwitchToPanel(PanelType.GameplayHUD);
         BoardController.Instance.SetState(_previousState);
     }
 
     private void QuitGame()
     {
-        // Zamanı normale almayı unutma, yoksa Ana Menü donuk başlar!
         Time.timeScale = 1f; 
-        
-        // SceneManager.LoadScene("MainMenu"); // Ana menüye dön
         Debug.Log("Ana Menüye Dönülüyor...");
+        SceneManager.LoadScene("Main Menu Scene"); 
     }
 
     private void OnDestroy()
     {
-        // Kural: Kod ile abone olduğun her eventten, obje silinirken çıkış yap! (Memory leak önleme)
+        // Memory leak önleme
         if (nextLevelButton != null) nextLevelButton.onClick.RemoveAllListeners();
         if (retryButton != null) retryButton.onClick.RemoveAllListeners();
         if (pauseButton != null) pauseButton.onClick.RemoveAllListeners();

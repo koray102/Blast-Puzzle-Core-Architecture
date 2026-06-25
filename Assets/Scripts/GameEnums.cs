@@ -40,3 +40,17 @@ public enum VFXType
     BombExplosion,
     DiscoBallExplosion
 }
+
+public enum PanelType
+{
+    GameplayHUD,
+    PauseMenu,
+    WinWindow,
+    LoseWindow
+}
+
+public enum MainMenuPanelType
+{
+    MainScreen,
+    SettingsScreen
+}
